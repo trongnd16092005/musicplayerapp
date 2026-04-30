@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "120935362918",
+    "firebase_url": "https://music-d6848-default-rtdb.firebaseio.com",
+    "project_id": "music-d6848",
+    "storage_bucket": "music-d6848.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120935362918:android:484f5dc4d71aee62df18a7",
+        "android_client_info": {
+          "package_name": "com.example.mpa23itb234"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsjIm0TFempJEuDHBtoxKCFVXRmpWfr5U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120935362918:android:2a988c4449b14574df18a7",
+        "android_client_info": {
+          "package_name": "com.harshRajpurohit.musicPlayer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsjIm0TFempJEuDHBtoxKCFVXRmpWfr5U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
