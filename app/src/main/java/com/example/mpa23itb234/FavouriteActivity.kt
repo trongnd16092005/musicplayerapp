@@ -3,6 +3,7 @@ package com.example.mpa23itb234
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -28,7 +29,7 @@ class FavouriteActivity : AppCompatActivity() {
 
         // Kiểm tra và loại bỏ các bài hát không còn tồn tại trong danh sách yêu thích
         favouriteSongs = checkPlaylist(favouriteSongs)
-
+        Log.d("FAV_DEBUG", "after checkPlaylist size = ${favouriteSongs.size}")
         binding.backBtnFA.setOnClickListener { finish() }
 
         binding.favouriteRV.setHasFixedSize(true)
@@ -50,6 +51,7 @@ class FavouriteActivity : AppCompatActivity() {
             intent.putExtra("class", "FavouriteShuffle")  // Thông tin để PlayerActivity biết phát shuffle từ Favourite
             startActivity(intent)
         }
+        Log.d("FAV_DEBUG", "final list size = ${favouriteSongs.size}")
     }
 
     @SuppressLint("NotifyDataSetChanged")

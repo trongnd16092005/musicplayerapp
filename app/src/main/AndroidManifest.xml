@@ -8,6 +8,7 @@
     <!-- Audio Permission for android 13 or higher -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
 
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Notification-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
@@ -22,7 +23,7 @@
         android:icon="@mipmap/music_player_icon"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
-        android:roundIcon="@mipmap/music_player_icon_round"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/splash_screen"
         tools:ignore="AllowBackup">

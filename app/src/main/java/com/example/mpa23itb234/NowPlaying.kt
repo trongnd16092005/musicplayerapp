@@ -11,81 +11,126 @@ import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.mpa23itb234.databinding.FragmentNowPlayingBinding
+
 class NowPlaying : Fragment() {
 
+    private var _binding: FragmentNowPlayingBinding? = null
+    private val binding get() = _binding!!
     companion object {
-        @SuppressLint("StaticFieldLeak")
-        lateinit var binding: FragmentNowPlayingBinding  // Binding layout fragment
+        var bindingInstance: FragmentNowPlayingBinding? = null
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        // Áp theme hiện tại
-        requireContext().theme.applyStyle(MainActivity.currentTheme[MainActivity.themeIndex], true)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+
+        requireContext().theme.applyStyle(
+            MainActivity.currentTheme[MainActivity.themeIndex],
+            true
+        )
+
         val view = inflater.inflate(R.layout.fragment_now_playing, container, false)
-        binding = FragmentNowPlayingBinding.bind(view)
-        binding.root.visibility = View.INVISIBLE  // Ẩn fragment lúc đầu
+        _binding = FragmentNowPlayingBinding.bind(view)
+        bindingInstance = _binding
 
-        // Nút play/pause
+        binding.root.visibility = View.INVISIBLE
+
+        // PLAY / PAUSE
         binding.playPauseBtnNP.setOnClickListener {
-            if (PlayerActivity.isPlaying) pauseMusic() else playMusic()
+            val service = PlayerActivity.musicService ?: return@setOnClickListener
+            val player = service.mediaPlayer ?: return@setOnClickListener
+
+            if (PlayerActivity.isPlaying) {
+                PlayerActivity.isPlaying = false
+                player.pause()
+                binding.playPauseBtnNP.setIconResource(R.drawable.play_icon)
+                service.showNotification(R.drawable.play_icon)
+            } else {
+                PlayerActivity.isPlaying = true
+                player.start()
+                binding.playPauseBtnNP.setIconResource(R.drawable.pause_icon)
+                service.showNotification(R.drawable.pause_icon)
+            }
         }
 
-        // Nút next bài hát
+        // NEXT SONG
         binding.nextBtnNP.setOnClickListener {
+            val service = PlayerActivity.musicService ?: return@setOnClickListener
+
+            if (PlayerActivity.musicListPA.isEmpty()) return@setOnClickListener
+
             setSongPosition(true)
-            PlayerActivity.musicService!!.createMediaPlayer()
-            // Cập nhật ảnh và tên bài hát mới
-            Glide.with(requireContext())
-                .load(PlayerActivity.musicListPA[PlayerActivity.songPosition].artUri)
-                .apply(RequestOptions().placeholder(R.drawable.music_player_icon_slash_screen).centerCrop())
-                .into(binding.songImgNP)
-            binding.songNameNP.text = PlayerActivity.musicListPA[PlayerActivity.songPosition].title
-            PlayerActivity.musicService!!.showNotification(R.drawable.pause_icon)
-            playMusic()
+
+            service.createMediaPlayer()
+
+            try {
+                Glide.with(requireContext())
+                    .load(PlayerActivity.musicListPA[PlayerActivity.songPosition].artUri)
+                    .apply(
+                        RequestOptions()
+                            .placeholder(R.drawable.music_player_icon_slash_screen)
+                            .centerCrop()
+                    )
+                    .into(binding.songImgNP)
+
+                binding.songNameNP.text =
+                    PlayerActivity.musicListPA[PlayerActivity.songPosition].title
+            } catch (_: Exception) {}
+
+            service.showNotification(R.drawable.pause_icon)
+
+            val player = service.mediaPlayer ?: return@setOnClickListener
+            PlayerActivity.isPlaying = true
+            player.start()
         }
 
-        // Click vào fragment mở PlayerActivity
+        // OPEN PLAYER ACTIVITY
         binding.root.setOnClickListener {
+            if (!isAdded) return@setOnClickListener
+
             val intent = Intent(requireContext(), PlayerActivity::class.java)
             intent.putExtra("index", PlayerActivity.songPosition)
             intent.putExtra("class", "NowPlaying")
             ContextCompat.startActivity(requireContext(), intent, null)
         }
 
-        return view
+        return binding.root
     }
 
     override fun onResume() {
         super.onResume()
-        if (PlayerActivity.musicService != null) {
-            binding.root.visibility = View.VISIBLE   // Hiện fragment
-            binding.songNameNP.isSelected = true     // Cho marquee chạy nếu tên dài
-            // Cập nhật ảnh và tên bài hát đang phát
+
+        val service = PlayerActivity.musicService ?: return
+
+        binding.root.visibility = View.VISIBLE
+        binding.songNameNP.isSelected = true
+
+        if (PlayerActivity.musicListPA.isEmpty()) return
+
+        try {
             Glide.with(requireContext())
                 .load(PlayerActivity.musicListPA[PlayerActivity.songPosition].artUri)
-                .apply(RequestOptions().placeholder(R.drawable.music_player_icon_slash_screen).centerCrop())
+                .apply(
+                    RequestOptions()
+                        .placeholder(R.drawable.music_player_icon_slash_screen)
+                        .centerCrop()
+                )
                 .into(binding.songImgNP)
-            binding.songNameNP.text = PlayerActivity.musicListPA[PlayerActivity.songPosition].title
 
-            // Cập nhật icon play/pause theo trạng thái
-            if (PlayerActivity.isPlaying)
-                binding.playPauseBtnNP.setIconResource(R.drawable.pause_icon)
-            else
-                binding.playPauseBtnNP.setIconResource(R.drawable.play_icon)
-        }
+            binding.songNameNP.text =
+                PlayerActivity.musicListPA[PlayerActivity.songPosition].title
+        } catch (_: Exception) {}
+
+        if (PlayerActivity.isPlaying)
+            binding.playPauseBtnNP.setIconResource(R.drawable.pause_icon)
+        else
+            binding.playPauseBtnNP.setIconResource(R.drawable.play_icon)
     }
 
-    private fun playMusic() {
-        PlayerActivity.isPlaying = true
-        PlayerActivity.musicService!!.mediaPlayer!!.start()
-        binding.playPauseBtnNP.setIconResource(R.drawable.pause_icon)
-        PlayerActivity.musicService!!.showNotification(R.drawable.pause_icon)
-    }
-
-    private fun pauseMusic() {
-        PlayerActivity.isPlaying = false
-        PlayerActivity.musicService!!.mediaPlayer!!.pause()
-        binding.playPauseBtnNP.setIconResource(R.drawable.play_icon)
-        PlayerActivity.musicService!!.showNotification(R.drawable.play_icon)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

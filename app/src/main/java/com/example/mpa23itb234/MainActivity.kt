@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.mpa23itb234.FavouriteActivity.Companion.favouriteSongs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.*
 import com.google.gson.GsonBuilder
@@ -110,6 +111,15 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+        val json = getSharedPreferences("FAVOURITES", MODE_PRIVATE)
+            .getString("FavouriteSongs", null)
+
+        if (json != null) {
+            val type = object : TypeToken<ArrayList<Music>>() {}.type
+            FavouriteActivity.favouriteSongs =
+                GsonBuilder().create().fromJson(json, type)
+        }
+        Log.d("FAV_DEBUG", "onCreate - before load size = ${favouriteSongs.size}")
     }
 
     // Yêu cầu quyền truy cập đọc file âm thanh tùy SDK
@@ -142,44 +152,50 @@ class MainActivity : AppCompatActivity() {
 
     // Hàm chính khởi tạo giao diện và dữ liệu
     private fun initializeLayout() {
+
         search = false
         MusicListMA = ArrayList()
 
-        // Lấy danh sách bài hát từ bộ nhớ máy
-        val localSongs = getAllAudio()
-        MusicListMA.addAll(localSongs)
+        // 🔥 Setup RecyclerView TRƯỚC
+        binding.musicRV.setHasFixedSize(true)
+        binding.musicRV.layoutManager = LinearLayoutManager(this)
+        musicAdapter = MusicAdapter(this, MusicListMA)
+        binding.musicRV.adapter = musicAdapter
 
-        // Lấy danh sách bài hát từ Firebase, thêm vào danh sách chính
+        // 🔥 Load local songs (nặng → chạy background)
+        Thread {
+            val localSongs = getAllAudio()
+
+            runOnUiThread {
+                MusicListMA.addAll(localSongs)
+                musicAdapter.notifyDataSetChanged()
+                binding.totalSongs.text = "Total Songs: ${musicAdapter.itemCount}"
+            }
+        }.start()
+
+        // 🔥 Load Firebase (KHÔNG cần Thread nữa)
         database.addListenerForSingleValueEvent(object : ValueEventListener {
+
             override fun onDataChange(snapshot: DataSnapshot) {
                 Log.d("firebase1", "Starting to fetch songs from Firebase...")
                 Log.d("firebase2", "DataSnapshot received with ${snapshot.childrenCount} songs")
-
-                if (!snapshot.exists()) {
-                    Log.w("firebase2", "Snapshot does not exist or empty at path 'songs'")
-                }
+                val tempList = ArrayList<Music>()
 
                 for (songSnap in snapshot.children) {
+
                     val songMap = songSnap.value as? Map<String, Any> ?: continue
 
-                    // Xử lý trường album nếu bị null hoặc "null"
                     val rawAlbum = songMap["album"]?.toString()
-                    val album = if (rawAlbum == null || rawAlbum == "null" || rawAlbum.isEmpty()) {
-                        "Unknown"
-                    } else {
-                        rawAlbum
-                    }
+                    val album = if (rawAlbum.isNullOrEmpty() || rawAlbum == "null")
+                        "Unknown" else rawAlbum
 
-                    // Xử lý duration dạng số hoặc string một cách an toàn
-                    val durationAny = songMap["duration"]
-                    val duration = when (durationAny) {
-                        is Long -> durationAny
-                        is Double -> durationAny.toLong()
-                        is String -> durationAny.toLongOrNull() ?: 0L
+                    val duration = when (val d = songMap["duration"]) {
+                        is Long -> d
+                        is Double -> d.toLong()
+                        is String -> d.toLongOrNull() ?: 0L
                         else -> 0L
                     }
 
-                    // Tạo đối tượng Music từ dữ liệu Firebase
                     val music = Music(
                         id = songMap["id"].toString(),
                         title = songMap["title"]?.toString() ?: "Unknown",
@@ -189,31 +205,38 @@ class MainActivity : AppCompatActivity() {
                         path = songMap["path"]?.toString() ?: "",
                         artUri = songMap["artUri"]?.toString() ?: ""
                     )
-                    MusicListMA.add(music)
+
+                    tempList.add(music) // ✅ đúng
                 }
 
-                // Cấu hình RecyclerView hiển thị danh sách nhạc
-                binding.musicRV.setHasFixedSize(true)
-                binding.musicRV.setItemViewCacheSize(13)
-                binding.musicRV.layoutManager = LinearLayoutManager(this@MainActivity)
-                musicAdapter = MusicAdapter(this@MainActivity, MusicListMA)
-                binding.musicRV.adapter = musicAdapter
+                // 🔥 update UI
+                MusicListMA.addAll(tempList)
+                musicAdapter.notifyDataSetChanged()
                 binding.totalSongs.text = "Total Songs: ${musicAdapter.itemCount}"
-
-                // Thiết lập refresh layout để tải lại danh sách nhạc khi kéo xuống refresh
-                binding.refreshLayout.setOnRefreshListener {
-                    MusicListMA.clear()
-                    MusicListMA.addAll(getAllAudio())
-                    musicAdapter.updateMusicList(MusicListMA)
-                    binding.refreshLayout.isRefreshing = false
-                }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@MainActivity, "Lỗi kết nối Firebase: ${error.message}", Toast.LENGTH_LONG).show()
-                binding.refreshLayout.isRefreshing = false
+                Toast.makeText(
+                    this@MainActivity,
+                    "Lỗi Firebase: ${error.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         })
+
+        // 🔥 Refresh
+        binding.refreshLayout.setOnRefreshListener {
+            Thread {
+                val songs = getAllAudio()
+
+                runOnUiThread {
+                    MusicListMA.clear()
+                    MusicListMA.addAll(songs)
+                    musicAdapter.notifyDataSetChanged()
+                    binding.refreshLayout.isRefreshing = false
+                }
+            }.start()
+        }
     }
 
     // Lấy danh sách bài hát từ bộ nhớ thiết bị
