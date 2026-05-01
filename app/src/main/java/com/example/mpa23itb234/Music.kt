@@ -43,9 +43,17 @@ fun formatDuration(duration: Long): String {
 
 // Lấy ảnh bìa nhúng từ file nhạc
 fun getImgArt(path: String): ByteArray? {
-    val retriever = MediaMetadataRetriever()
-    retriever.setDataSource(path)
-    return retriever.embeddedPicture
+    return try {
+        // ❌ nếu là URL → KHÔNG xử lý ở đây
+        if (path.startsWith("http")) return null
+
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(path)
+        retriever.embeddedPicture
+
+    } catch (e: Exception) {
+        null
+    }
 }
 
 // Cập nhật vị trí bài hát đang phát (tiến/lùi)
@@ -90,7 +98,13 @@ fun favouriteChecker(id: String): Int {
 fun checkPlaylist(playlist: ArrayList<Music>): ArrayList<Music> {
     val indicesToRemove = mutableListOf<Int>()
     playlist.forEachIndexed { index, music ->
-        if (!File(music.path).exists()) indicesToRemove.add(index)
+        // 🔥 Nếu là bài online → giữ lại
+        if (music.artUri.startsWith("http")) return@forEachIndexed
+
+        // 🔥 Nếu là local nhưng file không tồn tại → xoá
+        if (!File(music.path).exists()) {
+            indicesToRemove.add(index)
+        }
     }
     indicesToRemove.sortDescending()
     indicesToRemove.forEach { index -> playlist.removeAt(index) }

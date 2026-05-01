@@ -2,6 +2,7 @@ package com.example.mpa23itb234
 
 import android.annotation.SuppressLint
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.database.Cursor
@@ -17,6 +18,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.SeekBar
@@ -29,6 +31,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.mpa23itb234.databinding.ActivityPlayerBinding
 import com.example.mpa23itb234.databinding.AudioBoosterBinding
+import com.google.gson.GsonBuilder
 
 class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCompletionListener {
 
@@ -107,7 +110,9 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         binding.seekBarPA.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    musicService!!.mediaPlayer!!.seekTo(progress)
+                    val service = musicService ?: return
+                    val player = service.mediaPlayer ?: return
+                    player.seekTo(progress)
                     musicService!!.showNotification(if (isPlaying) R.drawable.pause_icon else R.drawable.play_icon)
                 }
             }
@@ -166,7 +171,9 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
             val shareIntent = Intent().apply {
                 action = Intent.ACTION_SEND
                 type = "audio/*"
-                putExtra(Intent.EXTRA_STREAM, Uri.parse(musicListPA[songPosition].path))
+                val song = musicListPA.getOrNull(songPosition) ?: return@setOnClickListener
+
+                putExtra(Intent.EXTRA_STREAM, Uri.parse(song.path))
             }
             startActivity(Intent.createChooser(shareIntent, "Sharing Music File!!"))
         }
@@ -177,14 +184,20 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
             if (isFavourite) {
                 isFavourite = false
                 binding.favouriteBtnPA.setImageResource(R.drawable.favourite_empty_icon)
-                FavouriteActivity.favouriteSongs.removeAt(fIndex)
+                if (fIndex != -1)
+                    FavouriteActivity.favouriteSongs.removeAt(fIndex)
             } else {
                 isFavourite = true
                 binding.favouriteBtnPA.setImageResource(R.drawable.favourite_icon)
                 FavouriteActivity.favouriteSongs.add(musicListPA[songPosition])
             }
             FavouriteActivity.favouritesChanged = true
+
+            saveFavourites(this)
+            updateFavouriteUI()
+            Log.d("FAV", FavouriteActivity.favouriteSongs.size.toString())
         }
+
     }
 
     // Khởi tạo giao diện khi vào Activity từ các nơi khác nhau
@@ -192,7 +205,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         songPosition = intent.getIntExtra("index", 0)
         when (intent.getStringExtra("class")) {
             "NowPlaying" -> {
-                setLayout()
                 // Cập nhật SeekBar và thời gian
                 binding.tvSeekBarStart.text = formatDuration(musicService!!.mediaPlayer!!.currentPosition.toLong())
                 binding.tvSeekBarEnd.text = formatDuration(musicService!!.mediaPlayer!!.duration.toLong())
@@ -232,11 +244,14 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         // Cập nhật trạng thái nút repeat và timer
         if (repeat) binding.repeatBtnPA.setColorFilter(ContextCompat.getColor(applicationContext, R.color.purple_500))
         if (min15 || min30 || min60) binding.timerBtnPA.setColorFilter(ContextCompat.getColor(applicationContext, R.color.purple_500))
-        binding.favouriteBtnPA.setImageResource(if (isFavourite) R.drawable.favourite_icon else R.drawable.favourite_empty_icon)
-
+//        binding.favouriteBtnPA.setImageResource(if (isFavourite) R.drawable.favourite_icon else R.drawable.favourite_empty_icon)
+        updateFavouriteUI()
         // Tạo gradient nền theo màu chính của ảnh
         val img = getImgArt(musicListPA[songPosition].path)
-        val image = if (img != null) BitmapFactory.decodeByteArray(img, 0, img.size) else BitmapFactory.decodeResource(resources, R.drawable.music_player_icon_slash_screen)
+        val image = BitmapFactory.decodeResource(
+            resources,
+            R.drawable.music_player_icon_slash_screen
+        )
         val bgColor = getMainColor(image)
         val gradient = GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, intArrayOf(0xFFFFFF, bgColor))
         binding.root.background = gradient
@@ -249,18 +264,27 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
             if (musicService!!.mediaPlayer == null) musicService!!.mediaPlayer = MediaPlayer()
             musicService!!.mediaPlayer!!.reset()
             musicService!!.mediaPlayer!!.setDataSource(musicListPA[songPosition].path)
-            musicService!!.mediaPlayer!!.prepare()
-            // Cập nhật thời gian start/end và SeekBar
-            binding.tvSeekBarStart.text = formatDuration(musicService!!.mediaPlayer!!.currentPosition.toLong())
-            binding.tvSeekBarEnd.text = formatDuration(musicService!!.mediaPlayer!!.duration.toLong())
-            binding.seekBarPA.progress = 0
-            binding.seekBarPA.max = musicService!!.mediaPlayer!!.duration
-            musicService!!.mediaPlayer!!.setOnCompletionListener(this)
-            nowPlayingId = musicListPA[songPosition].id
-            playMusic()
-            // Khởi tạo LoudnessEnhancer
-            loudnessEnhancer = LoudnessEnhancer(musicService!!.mediaPlayer!!.audioSessionId)
-            loudnessEnhancer.enabled = true
+            musicService!!.mediaPlayer!!.prepareAsync()
+
+            musicService!!.mediaPlayer!!.setOnPreparedListener { player ->
+
+                setLayout()
+                updateFavouriteUI()
+
+                // update UI sau khi load xong
+                binding.tvSeekBarStart.text = formatDuration(player.currentPosition.toLong())
+                binding.tvSeekBarEnd.text = formatDuration(player.duration.toLong())
+                binding.seekBarPA.progress = 0
+                binding.seekBarPA.max = player.duration
+
+                player.setOnCompletionListener(this)
+                nowPlayingId = musicListPA[songPosition].id
+
+                playMusic()
+
+                loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
+                loudnessEnhancer.enabled = true
+            }
         } catch (e: Exception) {
             Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show()
         }
@@ -285,7 +309,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
     // Chuyển bài tiếp theo hoặc trước đó
     private fun prevNextSong(increment: Boolean) {
         setSongPosition(increment)
-        setLayout()
         createMediaPlayer()
     }
 
@@ -307,17 +330,31 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
 
     // Khi bài kết thúc, tự động chuyển bài
     override fun onCompletion(mp: MediaPlayer?) {
+
+        if (musicListPA.isEmpty()) return
+
         setSongPosition(increment = true)
         createMediaPlayer()
-        setLayout()
 
-        // Cập nhật NowPlaying UI nếu đang mở
-        NowPlaying.binding.songNameNP.isSelected = true
-        Glide.with(applicationContext)
-            .load(musicListPA[songPosition].artUri)
-            .apply(RequestOptions().placeholder(R.drawable.music_player_icon_slash_screen).centerCrop())
-            .into(NowPlaying.binding.songImgNP)
-        NowPlaying.binding.songNameNP.text = musicListPA[songPosition].title
+        val song = musicListPA.getOrNull(songPosition) ?: return
+
+        // ✅ FIX: dùng bindingInstance
+        NowPlaying.bindingInstance?.apply {
+
+            songNameNP.isSelected = true
+
+            Glide.with(songImgNP.context)
+                .load(song.artUri)
+                .apply(
+                    RequestOptions()
+                        .placeholder(R.drawable.music_player_icon_slash_screen)
+                        .centerCrop()
+                )
+                .into(songImgNP)
+
+            songNameNP.text = song.title
+            updateFavouriteUI()
+        }
     }
 
     @Deprecated("Deprecated in Java")
@@ -394,6 +431,12 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         // Nếu phát từ file ngoài và đã dừng, thoát app
         if (musicListPA[songPosition].id == "Unknown" && !isPlaying) exitApplication()
     }
+    fun saveFavourites(context: Context) {
+        val editor = context.getSharedPreferences("FAVOURITES", MODE_PRIVATE).edit()
+        val json = GsonBuilder().create().toJson(FavouriteActivity.favouriteSongs)
+        editor.putString("FavouriteSongs", json)
+        editor.apply()
+    }
 
     // Khởi tạo service và playlist, hỗ trợ shuffle hoặc phát Next
     private fun initServiceAndPlaylist(playlist: ArrayList<Music>, shuffle: Boolean, playNext: Boolean = false) {
@@ -405,5 +448,13 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         if (shuffle) musicListPA.shuffle()
         setLayout()
         if (!playNext) PlayNext.playNextList = ArrayList()
+    }
+    private fun updateFavouriteUI() {
+        fIndex = favouriteChecker(musicListPA[songPosition].id)
+
+        if (isFavourite)
+            binding.favouriteBtnPA.setImageResource(R.drawable.favourite_icon)
+        else
+            binding.favouriteBtnPA.setImageResource(R.drawable.favourite_empty_icon)
     }
 }

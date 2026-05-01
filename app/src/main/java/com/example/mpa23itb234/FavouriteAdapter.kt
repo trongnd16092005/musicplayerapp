@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -37,11 +38,18 @@ class FavouriteAdapter(
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
         holder.name.text = musicList[position].title
+        val music = musicList[position]   // ✅ thêm dòng này
 
         // Load ảnh bìa bài hát dùng thư viện Glide với placeholder nếu chưa tải được ảnh
         Glide.with(context)
-            .load(musicList[position].artUri)
-            .apply(RequestOptions().placeholder(R.drawable.music_player_icon_slash_screen).centerCrop())
+            .load(music.artUri)
+            .apply(
+                RequestOptions()
+                    .placeholder(R.drawable.music_player_icon_slash_screen)
+                    .error(R.drawable.music_player_icon_slash_screen)
+                    .centerCrop()
+                    .override(150, 150)
+            )
             .into(holder.image)
 
         if(playNext){
@@ -90,6 +98,7 @@ class FavouriteAdapter(
                 ContextCompat.startActivity(context, intent, null)
             }
         }
+        Log.d("FAV_DEBUG", "Adapter bind: ${musicList[position].title}")
     }
 
     // Số lượng item trong danh sách
