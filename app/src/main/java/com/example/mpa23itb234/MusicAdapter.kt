@@ -40,8 +40,13 @@ private val selectionActivity: Boolean = false)
 
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
         holder.title.text = musicList[position].title
-        holder.album.text = musicList[position].album
+        val artist = musicList[position].artist
+        holder.album.text = if (artist.isNullOrEmpty() || artist == "null")
+            "Unknown Artist"
+        else
+            artist
         holder.duration.text = formatDuration(musicList[position].duration)
+
         val artUri = musicList[position].artUri
         if (!artUri.isNullOrEmpty() && (artUri.startsWith("http") || artUri.startsWith("https"))) {
             Glide.with(context)

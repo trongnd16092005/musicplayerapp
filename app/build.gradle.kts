@@ -69,4 +69,7 @@ dependencies {
     implementation(libs.verticalseekbar)
     implementation(libs.firebase.database)
 
+    implementation("com.google.firebase:firebase-storage-ktx:20.3.0")
+    implementation("com.google.firebase:firebase-database-ktx:20.3.0")
+
 }
