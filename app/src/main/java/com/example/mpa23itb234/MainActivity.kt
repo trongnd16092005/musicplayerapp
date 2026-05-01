@@ -5,14 +5,17 @@ import android.content.ContentValues.TAG
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -26,6 +29,7 @@ import com.google.firebase.database.*
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.example.mpa23itb234.databinding.ActivityMainBinding
+import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 class MainActivity : AppCompatActivity() {
 
@@ -33,6 +37,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toggle: ActionBarDrawerToggle
     private lateinit var musicAdapter: MusicAdapter
     private lateinit var database: DatabaseReference
+
+    private lateinit var storage: FirebaseStorage
+
+    private var musicUri: Uri? = null
+    private var imageUri: Uri? = null
+    private var currentEditText: EditText? = null
+
+    var currentUserName: String = "trong"
 
     companion object {
         lateinit var MusicListMA: ArrayList<Music>
@@ -57,6 +69,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        storage = FirebaseStorage.getInstance()
         // Cấu hình Navigation Drawer (menu bên hông)
         toggle = ActionBarDrawerToggle(this, binding.root, R.string.open, R.string.close)
         binding.root.addDrawerListener(toggle)
@@ -91,6 +104,9 @@ class MainActivity : AppCompatActivity() {
         }
         binding.playNextBtn.setOnClickListener {
             startActivity(Intent(this@MainActivity, PlayNext::class.java))
+        }
+        binding.uploadBtn.setOnClickListener {
+            uploadMusicDialog()
         }
 
         // Xử lý item click của navigation drawer (Settings, About, Exit)
@@ -226,14 +242,20 @@ class MainActivity : AppCompatActivity() {
 
         // 🔥 Refresh
         binding.refreshLayout.setOnRefreshListener {
+
             Thread {
-                val songs = getAllAudio()
+                val localSongs = getAllAudio()
 
                 runOnUiThread {
+
+                    // 1. clear list
                     MusicListMA.clear()
-                    MusicListMA.addAll(songs)
-                    musicAdapter.notifyDataSetChanged()
-                    binding.refreshLayout.isRefreshing = false
+
+                    // 2. add local
+                    MusicListMA.addAll(localSongs)
+
+                    // 3. load lại firebase
+                    loadFirebaseSongsAfterRefresh()
                 }
             }.start()
         }
@@ -312,5 +334,223 @@ class MainActivity : AppCompatActivity() {
             }
         })
         return super.onCreateOptionsMenu(menu)
+    }
+    private fun uploadMusicDialog(){
+
+        val customDialog = LayoutInflater.from(this)
+            .inflate(R.layout.activity_upload, binding.root, false)
+
+        val songTitle = customDialog.findViewById<EditText>(R.id.songTitle)
+        val songFile = customDialog.findViewById<EditText>(R.id.songFile)
+        val songImage = customDialog.findViewById<EditText>(R.id.songImage)
+
+        // chọn file nhạc
+        songFile.setOnClickListener {
+            currentEditText = songFile
+            pickAudio()
+        }
+
+        // chọn ảnh
+        songImage.setOnClickListener {
+            currentEditText = songImage
+            pickImage()
+        }
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle("Upload Music")
+            .setView(customDialog)
+            .setPositiveButton("ADD") { _, _ ->
+
+                val title = songTitle.text.toString()
+
+                if(title.isEmpty()){
+                    Toast.makeText(this, "Enter title!", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                if(musicUri == null){
+                    Toast.makeText(this, "Select music file!", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+
+                uploadToFirebase(title)
+
+                Toast.makeText(this, "Uploaded!", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.show()
+        setDialogBtnBackground(this, dialog)
+    }
+    private fun pickAudio(){
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "audio/*"
+        startActivityForResult(intent, 101)
+    }
+
+    private fun pickImage(){
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        startActivityForResult(intent, 102)
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(resultCode != RESULT_OK || data == null) return
+
+        when(requestCode){
+            101 -> {
+                musicUri = data.data
+                currentEditText?.setText("Music Selected")
+            }
+            102 -> {
+                imageUri = data.data
+                currentEditText?.setText("Image Selected")
+            }
+        }
+    }
+    private fun uploadToFirebase(title: String){
+
+        val safeTitle = title.replace(" ", "_")
+        val uniqueName = "${safeTitle}_${System.currentTimeMillis()}"
+
+        val musicRef = storage.reference.child("music/$uniqueName.mp3")
+        val imageRef = storage.reference.child("images/$uniqueName.jpg")
+
+        // 👉 lấy duration thật
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(this, musicUri!!)
+        val duration = retriever
+            .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            ?.toLong() ?: 0
+
+        // 👉 upload nhạc
+        musicRef.putFile(musicUri!!)
+            .addOnSuccessListener {
+
+                musicRef.downloadUrl.addOnSuccessListener { musicUrl ->
+
+                    if(imageUri != null){
+
+                        imageRef.putFile(imageUri!!)
+                            .addOnSuccessListener {
+
+                                imageRef.downloadUrl.addOnSuccessListener { imageUrl ->
+
+                                    saveToDatabase(
+                                        title,
+                                        musicUrl.toString(),
+                                        imageUrl.toString(),
+                                        duration
+                                    )
+                                }
+                            }
+
+                    } else {
+                        saveToDatabase(
+                            title,
+                            musicUrl.toString(),
+                            "",
+                            duration
+                        )
+                    }
+                }
+            }
+    }
+    private fun saveToDatabase(
+        title: String,
+        musicUrl: String,
+        imageUrl: String,
+        duration: Long
+    ){
+
+        val id = database.push().key!!   // 👈 FIX QUAN TRỌNG
+
+        val artistName = if (currentUserName.isNotEmpty()) currentUserName else "Unknown"
+
+        val musicMap = mapOf(
+            "id" to id,
+            "title" to title,
+            "artist" to artistName,
+            "album" to "None",
+            "duration" to duration,
+            "path" to musicUrl,
+            "artUri" to imageUrl,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        database.child(id).setValue(musicMap)
+            .addOnSuccessListener {
+
+                val music = Music(
+                    id,
+                    title,
+                    "None",
+                    artistName,
+                    duration,
+                    musicUrl,
+                    imageUrl
+                )
+
+                MusicListMA.add(music)
+
+                Toast.makeText(this, "Uploaded!", Toast.LENGTH_SHORT).show()
+            }
+    }
+    private fun loadFirebaseSongsAfterRefresh(){
+
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                for (songSnap in snapshot.children) {
+
+                    val songMap = songSnap.value as? Map<String, Any> ?: continue
+
+                    val rawAlbum = songMap["album"]?.toString()
+                    val album = if (rawAlbum.isNullOrEmpty() || rawAlbum == "null")
+                        "Unknown" else rawAlbum
+
+                    val duration = when (val d = songMap["duration"]) {
+                        is Long -> d
+                        is Double -> d.toLong()
+                        is String -> d.toLongOrNull() ?: 0L
+                        else -> 0L
+                    }
+                    val artist = songMap["artist"]?.toString()
+                        ?.takeIf { it.isNotEmpty() && it != "null" }
+                        ?: "Unknown"
+                    val music = Music(
+                        id = songMap["id"].toString(),
+                        title = songMap["title"]?.toString() ?: "Unknown",
+                        album = album,
+                        artist = artist,
+                        duration = duration,
+                        path = songMap["path"]?.toString() ?: "",
+                        artUri = songMap["artUri"]?.toString() ?: ""
+                    )
+
+                    // ❗ tránh trùng
+                    val exists = MusicListMA.any { it.id == music.id }
+
+                    if (!exists) {
+                        MusicListMA.add(music)
+                    }
+                }
+
+                // update UI
+                musicAdapter.notifyDataSetChanged()
+                binding.totalSongs.text = "Total Songs: ${musicAdapter.itemCount}"
+
+                // stop loading
+                binding.refreshLayout.isRefreshing = false
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                binding.refreshLayout.isRefreshing = false
+            }
+        })
     }
 }

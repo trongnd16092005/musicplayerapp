@@ -11,13 +11,13 @@ import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 data class Music(
-    val id: String,
-    val title: String,
-    val album: String,
-    val artist: String,
+    val id: String = "",
+    val title: String = "",
+    val album: String = "",
+    val artist: String = "",
     val duration: Long = 0,
-    val path: String,
-    val artUri: String
+    val path: String = "",
+    val artUri: String = ""
 )
 
 // Lớp đại diện cho một danh sách phát
@@ -44,8 +44,8 @@ fun formatDuration(duration: Long): String {
 // Lấy ảnh bìa nhúng từ file nhạc
 fun getImgArt(path: String): ByteArray? {
     return try {
-        // ❌ nếu là URL → KHÔNG xử lý ở đây
-        if (path.startsWith("http")) return null
+        // ❌ bỏ qua online + content uri
+        if (path.startsWith("http") || path.startsWith("content://")) return null
 
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
@@ -73,12 +73,12 @@ fun setSongPosition(increment: Boolean) {
 
 // Thoát ứng dụng và dọn dẹp các tài nguyên nhạc
 fun exitApplication() {
-    if (PlayerActivity.musicService != null) {
-        PlayerActivity.musicService!!.audioManager.abandonAudioFocus(PlayerActivity.musicService)
-        PlayerActivity.musicService!!.stopForeground(true)
-        PlayerActivity.musicService!!.mediaPlayer!!.release()
-        PlayerActivity.musicService = null
+    PlayerActivity.musicService?.apply {
+        audioManager.abandonAudioFocus(this)
+        stopForeground(true)
+        mediaPlayer?.release()
     }
+    PlayerActivity.musicService = null
     exitProcess(1)
 }
 
@@ -97,17 +97,21 @@ fun favouriteChecker(id: String): Int {
 // Loại bỏ các bài hát không tồn tại khỏi playlist
 fun checkPlaylist(playlist: ArrayList<Music>): ArrayList<Music> {
     val indicesToRemove = mutableListOf<Int>()
-    playlist.forEachIndexed { index, music ->
-        // 🔥 Nếu là bài online → giữ lại
-        if (music.artUri.startsWith("http")) return@forEachIndexed
 
-        // 🔥 Nếu là local nhưng file không tồn tại → xoá
+    playlist.forEachIndexed { index, music ->
+
+        // 🔥 nếu là online → giữ
+        if (music.path.startsWith("http")) return@forEachIndexed
+
+        // 🔥 nếu local mà không tồn tại → xoá
         if (!File(music.path).exists()) {
             indicesToRemove.add(index)
         }
     }
+
     indicesToRemove.sortDescending()
-    indicesToRemove.forEach { index -> playlist.removeAt(index) }
+    indicesToRemove.forEach { playlist.removeAt(it) }
+
     return playlist
 }
 
