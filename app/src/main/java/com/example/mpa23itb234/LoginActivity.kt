@@ -30,6 +30,7 @@ class LoginActivity : AppCompatActivity() {
                 RegisterActivity.tempUsers[username] == password) {
                 Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
                 val intent = Intent(this, MainActivity::class.java)
+                intent.putExtra("userName", username) // Truyền tên user sang MainActivity
                 startActivity(intent)
                 finish()
             } else {

@@ -108,6 +108,13 @@
             tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
         <activity
+            android:name=".ProfileActivity"
+            android:exported="false"
+            android:screenOrientation="sensorPortrait"
+            android:configChanges="uiMode|orientation"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+
+        <activity
             android:name=".MainActivity"
             android:configChanges="uiMode|orientation"
             android:exported="true"

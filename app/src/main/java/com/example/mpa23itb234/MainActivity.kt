@@ -84,6 +84,10 @@ class MainActivity : AppCompatActivity() {
         // Khởi tạo kết nối Firebase Realtime Database tại node "songs"
         database = FirebaseDatabase.getInstance().getReference("songs")
 
+        // Lấy thông tin user từ Login
+        val userFromLogin = intent.getStringExtra("userName")
+        if (userFromLogin != null) currentUserName = userFromLogin
+
         // Yêu cầu quyền truy cập âm thanh ở runtime
         if (requestRuntimePermission()) {
             initializeLayout() // Nếu đã có quyền thì load giao diện và dữ liệu
@@ -112,6 +116,11 @@ class MainActivity : AppCompatActivity() {
         // Xử lý item click của navigation drawer (Settings, About, Exit)
         binding.navView.setNavigationItemSelectedListener {
             when (it.itemId) {
+                R.id.navProfile -> {
+                    val intent = Intent(this@MainActivity, ProfileActivity::class.java)
+                    intent.putExtra("userName", currentUserName)
+                    startActivity(intent)
+                }
                 R.id.navSettings -> startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                 R.id.navAbout -> startActivity(Intent(this@MainActivity, AboutActivity::class.java))
                 R.id.navExit -> {
