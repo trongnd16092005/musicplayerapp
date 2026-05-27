@@ -22,18 +22,25 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.loginBtn.setOnClickListener {
-            val username = binding.username.text.toString()
-            val password = binding.password.text.toString()
+            val username = binding.username.text.toString().trim()
+            val password = binding.password.text.toString().trim()
 
-            // Kiểm tra tài khoản cố định: abc / 123
-            if (username == "abc" && password == "123") {
+            // Kiểm tra trong danh sách người dùng tạm thời
+            if (RegisterActivity.tempUsers.containsKey(username) && 
+                RegisterActivity.tempUsers[username] == password) {
                 Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
-                finish() // Đóng LoginActivity để không quay lại được bằng nút Back
+                finish()
             } else {
                 Toast.makeText(this, "Sai tài khoản hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // Chuyển sang màn hình đăng ký
+        findViewById<android.widget.TextView>(R.id.signUpBtn)?.setOnClickListener {
+            val intent = Intent(this, RegisterActivity::class.java)
+            startActivity(intent)
         }
     }
 }
