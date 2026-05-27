@@ -48,21 +48,5 @@ class ProfileActivity : AppCompatActivity() {
         binding.profileSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
-
-        // Logout
-        binding.profileLogout.setOnClickListener {
-            val builder = MaterialAlertDialogBuilder(this)
-            builder.setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
-                .setPositiveButton("Logout") { _, _ ->
-                    stopMusic() // Dừng nhạc trước khi đăng xuất
-                    val intent = Intent(this, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
     }
 }

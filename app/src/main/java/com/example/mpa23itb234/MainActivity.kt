@@ -122,6 +122,20 @@ class MainActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
                 R.id.navAbout -> startActivity(Intent(this@MainActivity, AboutActivity::class.java))
+                R.id.navLogout -> {
+                    val builder = MaterialAlertDialogBuilder(this)
+                    builder.setTitle("Logout")
+                        .setMessage("Are you sure you want to logout?")
+                        .setPositiveButton("Logout") { _, _ ->
+                            stopMusic()
+                            val intent = Intent(this, LoginActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            finish()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
                 R.id.navExit -> {
                     val builder = MaterialAlertDialogBuilder(this)
                     builder.setTitle("Exit")
