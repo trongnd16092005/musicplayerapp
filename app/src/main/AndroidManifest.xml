@@ -89,17 +89,24 @@
         </activity>
 
         <activity
+            android:name=".LoginActivity"
+            android:exported="true"
+            android:screenOrientation="sensorPortrait"
+            android:configChanges="uiMode|orientation"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".MainActivity"
             android:configChanges="uiMode|orientation"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             android:launchMode="singleTask"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <!-- Updated Permission for Android 14   -->
