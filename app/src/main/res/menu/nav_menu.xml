@@ -6,10 +6,6 @@
         android:title="Profile"
         android:icon="@drawable/add_icon"/>
 
-    <item android:id="@+id/navSettings"
-        android:title="@string/settings"
-        android:icon="@drawable/settings_icon"/>
-
     <item android:id="@+id/navAbout"
         android:title="@string/about"
         android:icon="@drawable/about_icon"/>
