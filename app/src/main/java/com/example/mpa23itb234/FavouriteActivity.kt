@@ -22,19 +22,20 @@ class FavouriteActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Đặt theme ứng dụng theo lựa chọn hiện tại trong MainActivity
-        setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
+        setTheme(MainActivity.currentThemeNav[MainActivity.themeIndex])
         // Khởi tạo ViewBinding
         binding = ActivityFavouriteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.favouriteToolbar.setNavigationOnClickListener { finish() }
+
         // Kiểm tra và loại bỏ các bài hát không còn tồn tại trong danh sách yêu thích
         favouriteSongs = checkPlaylist(favouriteSongs)
         Log.d("FAV_DEBUG", "after checkPlaylist size = ${favouriteSongs.size}")
-        binding.backBtnFA.setOnClickListener { finish() }
 
         binding.favouriteRV.setHasFixedSize(true)
         binding.favouriteRV.setItemViewCacheSize(13)
-        binding.favouriteRV.layoutManager = GridLayoutManager(this, 4)
+        binding.favouriteRV.layoutManager = GridLayoutManager(this, 2) // Changed to 2 for better visibility
         adapter = FavouriteAdapter(this, favouriteSongs)
         binding.favouriteRV.adapter = adapter
 
