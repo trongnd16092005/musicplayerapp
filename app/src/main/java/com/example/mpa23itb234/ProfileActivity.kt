@@ -55,6 +55,7 @@ class ProfileActivity : AppCompatActivity() {
             builder.setTitle("Logout")
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton("Logout") { _, _ ->
+                    stopMusic() // Dừng nhạc trước khi đăng xuất
                     val intent = Intent(this, LoginActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
