@@ -14,6 +14,9 @@ class AboutActivity : AppCompatActivity() {
         binding = ActivityAboutBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.title = "About"
+        binding.aboutToolbar.setNavigationOnClickListener {
+            finish()
+        }
         binding.aboutText.text = aboutText()
     }
     private fun aboutText(): String{

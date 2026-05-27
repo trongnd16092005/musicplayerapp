@@ -23,9 +23,12 @@ class PlaylistDetails : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
+        setTheme(MainActivity.currentThemeNav[MainActivity.themeIndex])
         binding = ActivityPlaylistDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        binding.playlistDetailsToolbar.setNavigationOnClickListener { finish() }
+
         currentPlaylistPos = intent.extras?.get("index") as Int
         try{PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist =
             checkPlaylist(playlist = PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist)}
@@ -35,7 +38,6 @@ class PlaylistDetails : AppCompatActivity() {
         binding.playlistDetailsRV.layoutManager = LinearLayoutManager(this)
         adapter = MusicAdapter(this, PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist, playlistDetails = true)
         binding.playlistDetailsRV.adapter = adapter
-        binding.backBtnPD.setOnClickListener { finish() }
         binding.shuffleBtnPD.setOnClickListener {
             val intent = Intent(this, PlayerActivity::class.java)
             intent.putExtra("index", 0)

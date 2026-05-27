@@ -29,6 +29,11 @@ class SettingsActivity : AppCompatActivity() {
         binding.coolGreenTheme.setOnClickListener { saveTheme(3) }
         binding.coolBlackTheme.setOnClickListener { saveTheme(4) }
         binding.versionName.text = setVersionDetails()
+
+        binding.settingsToolbar.setNavigationOnClickListener {
+            finish()
+        }
+
         binding.sortBtn.setOnClickListener {
             val menuList = arrayOf("Recently Added", "Song Title", "File Size")
             var currentSort = MainActivity.sortOrder

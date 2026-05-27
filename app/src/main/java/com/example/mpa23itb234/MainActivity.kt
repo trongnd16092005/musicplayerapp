@@ -84,6 +84,10 @@ class MainActivity : AppCompatActivity() {
         // Khởi tạo kết nối Firebase Realtime Database tại node "songs"
         database = FirebaseDatabase.getInstance().getReference("songs")
 
+        // Lấy thông tin user từ Login
+        val userFromLogin = intent.getStringExtra("userName")
+        if (userFromLogin != null) currentUserName = userFromLogin
+
         // Yêu cầu quyền truy cập âm thanh ở runtime
         if (requestRuntimePermission()) {
             initializeLayout() // Nếu đã có quyền thì load giao diện và dữ liệu
@@ -112,8 +116,26 @@ class MainActivity : AppCompatActivity() {
         // Xử lý item click của navigation drawer (Settings, About, Exit)
         binding.navView.setNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.navSettings -> startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                R.id.navProfile -> {
+                    val intent = Intent(this@MainActivity, ProfileActivity::class.java)
+                    intent.putExtra("userName", currentUserName)
+                    startActivity(intent)
+                }
                 R.id.navAbout -> startActivity(Intent(this@MainActivity, AboutActivity::class.java))
+                R.id.navLogout -> {
+                    val builder = MaterialAlertDialogBuilder(this)
+                    builder.setTitle("Logout")
+                        .setMessage("Are you sure you want to logout?")
+                        .setPositiveButton("Logout") { _, _ ->
+                            stopMusic()
+                            val intent = Intent(this, LoginActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            finish()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
                 R.id.navExit -> {
                     val builder = MaterialAlertDialogBuilder(this)
                     builder.setTitle("Exit")
@@ -132,7 +154,7 @@ class MainActivity : AppCompatActivity() {
 
         if (json != null) {
             val type = object : TypeToken<ArrayList<Music>>() {}.type
-            FavouriteActivity.favouriteSongs =
+            favouriteSongs =
                 GsonBuilder().create().fromJson(json, type)
         }
         Log.d("FAV_DEBUG", "onCreate - before load size = ${favouriteSongs.size}")
@@ -305,6 +327,12 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (PlayerActivity.musicService != null) binding.nowPlaying.visibility = View.VISIBLE
+        
+        // Kiểm tra xem có yêu cầu upload từ Profile không
+        if (intent.getStringExtra("action") == "upload") {
+            intent.removeExtra("action") // Xóa extra để tránh hiện lại khi rotate
+            uploadMusicDialog()
+        }
     }
 
     // Khi thoát activity, nếu không còn bài phát, thoát app luôn

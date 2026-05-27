@@ -73,13 +73,20 @@ fun setSongPosition(increment: Boolean) {
 
 // Thoát ứng dụng và dọn dẹp các tài nguyên nhạc
 fun exitApplication() {
+    stopMusic()
+    exitProcess(1)
+}
+
+// Dừng phát nhạc và dọn dẹp tài nguyên (Dùng khi đăng xuất)
+fun stopMusic() {
     PlayerActivity.musicService?.apply {
         audioManager.abandonAudioFocus(this)
         stopForeground(true)
         mediaPlayer?.release()
+        mediaPlayer = null
     }
     PlayerActivity.musicService = null
-    exitProcess(1)
+    PlayerActivity.isPlaying = false
 }
 
 // Kiểm tra bài hát có nằm trong danh sách yêu thích không
