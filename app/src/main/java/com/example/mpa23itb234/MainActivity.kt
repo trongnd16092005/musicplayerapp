@@ -121,7 +121,6 @@ class MainActivity : AppCompatActivity() {
                     intent.putExtra("userName", currentUserName)
                     startActivity(intent)
                 }
-                R.id.navSettings -> startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                 R.id.navAbout -> startActivity(Intent(this@MainActivity, AboutActivity::class.java))
                 R.id.navExit -> {
                     val builder = MaterialAlertDialogBuilder(this)
@@ -141,7 +140,7 @@ class MainActivity : AppCompatActivity() {
 
         if (json != null) {
             val type = object : TypeToken<ArrayList<Music>>() {}.type
-            FavouriteActivity.favouriteSongs =
+            favouriteSongs =
                 GsonBuilder().create().fromJson(json, type)
         }
         Log.d("FAV_DEBUG", "onCreate - before load size = ${favouriteSongs.size}")
@@ -314,6 +313,12 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (PlayerActivity.musicService != null) binding.nowPlaying.visibility = View.VISIBLE
+        
+        // Kiểm tra xem có yêu cầu upload từ Profile không
+        if (intent.getStringExtra("action") == "upload") {
+            intent.removeExtra("action") // Xóa extra để tránh hiện lại khi rotate
+            uploadMusicDialog()
+        }
     }
 
     // Khi thoát activity, nếu không còn bài phát, thoát app luôn
