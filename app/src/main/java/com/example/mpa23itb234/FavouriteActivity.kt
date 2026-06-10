@@ -28,6 +28,7 @@ class FavouriteActivity : AppCompatActivity() {
 
         // Kiểm tra và loại bỏ các bài hát không còn tồn tại trong danh sách yêu thích
         favouriteSongs = checkPlaylist(favouriteSongs)
+        UserLibraryStore.saveFavourites(this)
 
         binding.backBtnFA.setOnClickListener { finish() }
 

@@ -16,8 +16,8 @@ class ApplicationClass:Application() {
     override fun onCreate() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            val notificationChannel = NotificationChannel(CHANNEL_ID, "Now Playing Song", NotificationManager.IMPORTANCE_HIGH)
-            notificationChannel.description = "Needed to Show Notification for Playing Song"
+            val notificationChannel = NotificationChannel(CHANNEL_ID, getString(R.string.notification_channel_name), NotificationManager.IMPORTANCE_HIGH)
+            notificationChannel.description = getString(R.string.notification_channel_description)
 
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(notificationChannel)

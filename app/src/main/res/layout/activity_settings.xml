@@ -10,6 +10,137 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:layout_marginTop="2dp"
+        android:background="@color/white"
+        android:gravity="center"
+        android:text="@string/account_settings"
+        android:textColor="@color/black"
+        android:textSize="18sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="match_parent"
+                android:background="@color/cool_pink" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/account_username_label"
+                    android:textColor="@color/cool_pink"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/accountUsername"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/loading_account"
+                    android:textColor="@color/black"
+                    android:textSize="17sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="match_parent"
+                android:background="@color/cool_pink" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/account_email_label"
+                    android:textColor="@color/cool_pink"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/accountEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/loading_account"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginBottom="2dp"
+        android:background="@color/white"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <Button
+            android:id="@+id/changeUsernameBtn"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/change_username"
+            android:textAllCaps="false"
+            android:textColor="@color/black" />
+
+        <View
+            android:layout_width="4dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_vertical"
+            android:background="@color/cool_pink" />
+
+        <Button
+            android:id="@+id/changePasswordBtn"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/change_password"
+            android:textAllCaps="false"
+            android:textColor="@color/black" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:text="@string/set_theme"
         android:background="@color/white"
         android:textSize="18sp"
@@ -86,15 +217,10 @@
             android:padding="5dp"/>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/versionName"
+    <View
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/white"
-        android:padding="16dp"
-        android:text="@string/version_name"
-        android:textColor="@color/black"
-        android:textSize="18sp"
-        android:visibility="visible" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/white" />
 
 </LinearLayout>

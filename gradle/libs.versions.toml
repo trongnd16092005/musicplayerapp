@@ -6,6 +6,7 @@ appcompat = "1.7.0"
 material = "1.12.0"
 activity = "1.9.0"
 constraintlayout = "2.1.4"
+lifecycleRuntimeKtx = "2.8.4"
 
 legacy-support = "1.0.0"
 glide = "4.16.0"
@@ -14,6 +15,8 @@ gson = "2.10.1"
 verticalseekbar = "1.2.7"
 googleGmsGoogleServices = "4.4.2"
 firebaseDatabase = "21.0.0"
+firebaseAuth = "22.3.1"
+firebaseStorage = "20.3.0"
 
 
 [libraries]
@@ -22,6 +25,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 
 legacy-support = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacy-support" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
@@ -29,6 +33,8 @@ androidx-media = { group = "androidx.media", name = "media", version.ref = "medi
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 verticalseekbar = { group = "com.github.lukelorusso", name = "VerticalSeekBar", version.ref = "verticalseekbar" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

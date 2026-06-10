@@ -28,6 +28,19 @@
         tools:ignore="AllowBackup">
 
         <activity
+            android:name=".AuthActivity"
+            android:configChanges="uiMode|orientation"
+            android:exported="true"
+            android:screenOrientation="sensorPortrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".PlayNext"
             android:exported="false" />
 
@@ -90,16 +103,10 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="uiMode|orientation"
-            android:exported="true"
+            android:exported="false"
             android:screenOrientation="sensorPortrait"
             android:launchMode="singleTask"
-            tools:ignore="DiscouragedApi,LockedOrientationActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
         <!-- Updated Permission for Android 14   -->
         <service

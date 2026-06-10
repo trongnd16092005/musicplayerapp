@@ -99,6 +99,19 @@
                     android:scrollbars="vertical" />
 
             </LinearLayout>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/uploadBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="18dp"
+                android:backgroundTint="@color/white"
+                android:contentDescription="@string/upload_music"
+                android:src="@drawable/add_icon"
+                app:tint="?attr/themeColor"
+                app:layout_constraintBottom_toTopOf="@id/nowPlaying"
+                app:layout_constraintEnd_toEndOf="parent" />
+
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/nowPlaying"
                 android:layout_width="match_parent"

@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.gson.GsonBuilder
 import com.example.mpa23itb234.databinding.ActivityPlaylistDetailsBinding
 
 class PlaylistDetails : AppCompatActivity() {
@@ -19,6 +18,10 @@ class PlaylistDetails : AppCompatActivity() {
 
     companion object{
         var currentPlaylistPos: Int = -1
+
+        fun currentPlaylistOrNull(): Playlist? {
+            return PlaylistActivity.musicPlaylist.ref.getOrNull(currentPlaylistPos)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,14 +29,20 @@ class PlaylistDetails : AppCompatActivity() {
         setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
         binding = ActivityPlaylistDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        currentPlaylistPos = intent.extras?.get("index") as Int
-        try{PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist =
-            checkPlaylist(playlist = PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist)}
-        catch(e: Exception){}
+        currentPlaylistPos = intent.getIntExtra("index", -1)
+        val currentPlaylist = currentPlaylistOrNull() ?: run {
+            finish()
+            return
+        }
+        currentPlaylist.playlist = runCatching {
+            checkPlaylist(playlist = currentPlaylist.playlist)
+        }.getOrElse {
+            ArrayList()
+        }
         binding.playlistDetailsRV.setItemViewCacheSize(10)
         binding.playlistDetailsRV.setHasFixedSize(true)
         binding.playlistDetailsRV.layoutManager = LinearLayoutManager(this)
-        adapter = MusicAdapter(this, PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist, playlistDetails = true)
+        adapter = MusicAdapter(this, currentPlaylist.playlist, playlistDetails = true)
         binding.playlistDetailsRV.adapter = adapter
         binding.backBtnPD.setOnClickListener { finish() }
         binding.shuffleBtnPD.setOnClickListener {
@@ -47,14 +56,15 @@ class PlaylistDetails : AppCompatActivity() {
         }
         binding.removeAllPD.setOnClickListener {
             val builder = MaterialAlertDialogBuilder(this)
-            builder.setTitle("Remove")
-                .setMessage("Do you want to remove all songs from playlist?")
-                .setPositiveButton("Yes"){ dialog, _ ->
-                    PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist.clear()
+            builder.setTitle(getString(R.string.remove))
+                .setMessage(getString(R.string.remove_all_playlist_message))
+                .setPositiveButton(getString(R.string.yes)){ dialog, _ ->
+                    currentPlaylistOrNull()?.playlist?.clear()
+                    UserLibraryStore.saveAll(this)
                     adapter.refreshPlaylist()
                     dialog.dismiss()
                 }
-                .setNegativeButton("No"){dialog, _ ->
+                .setNegativeButton(getString(R.string.no)){dialog, _ ->
                     dialog.dismiss()
                 }
             val customDialog = builder.create()
@@ -67,23 +77,23 @@ class PlaylistDetails : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     override fun onResume() {
         super.onResume()
-        binding.playlistNamePD.text = PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].name
-        binding.moreInfoPD.text = "Total ${adapter.itemCount} Songs.\n\n" +
-                "Created On:\n${PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].createdOn}\n\n" +
-                "  -- ${PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].createdBy}"
+        val currentPlaylist = currentPlaylistOrNull() ?: run {
+            finish()
+            return
+        }
+        binding.playlistNamePD.text = currentPlaylist.name
+        binding.moreInfoPD.text = getString(R.string.playlist_song_count, adapter.itemCount) + "\n\n" +
+                "${getString(R.string.playlist_created_on)}\n${currentPlaylist.createdOn}\n\n" +
+                "  -- ${currentPlaylist.createdBy}"
         if(adapter.itemCount > 0)
         {
             Glide.with(this)
-                .load(PlaylistActivity.musicPlaylist.ref[currentPlaylistPos].playlist[0].artUri)
+                .load(currentPlaylist.playlist.getOrNull(0)?.artUri)
                 .apply(RequestOptions().placeholder(R.drawable.music_player_icon_slash_screen).centerCrop())
                 .into(binding.playlistImgPD)
             binding.shuffleBtnPD.visibility = View.VISIBLE
         }
         adapter.notifyDataSetChanged()
-        //for storing favourites data using shared preferences
-        val editor = getSharedPreferences("FAVOURITES", MODE_PRIVATE).edit()
-        val jsonStringPlaylist = GsonBuilder().create().toJson(PlaylistActivity.musicPlaylist)
-        editor.putString("MusicPlaylist", jsonStringPlaylist)
-        editor.apply()
+        UserLibraryStore.saveAll(this)
     }
 }

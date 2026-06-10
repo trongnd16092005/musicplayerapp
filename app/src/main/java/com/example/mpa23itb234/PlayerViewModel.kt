@@ -26,13 +26,14 @@ class PlayerViewModel : ViewModel() {
     }
 
     fun playSong(list: List<Music>, position: Int) {
+        val song = list.getOrNull(position) ?: return
         musicService?.setPlaylist(list, position)
         musicService?.prepare()
         musicService?.play()
 
         updateState(
             isPlaying = true,
-            currentSong = list[position]
+            currentSong = song
         )
     }
 

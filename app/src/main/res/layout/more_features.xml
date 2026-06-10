@@ -76,5 +76,32 @@
             android:textColor="@color/white"
             app:iconTint="@color/white"/>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editSongBtn"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:text="@string/edit"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:icon="@drawable/settings_icon"
+            app:iconGravity="top"
+            app:iconTint="@color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteSongBtn"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:text="@string/delete"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:icon="@drawable/delete_icon"
+            app:iconGravity="top"
+            app:iconTint="@color/white" />
 
 </LinearLayout>

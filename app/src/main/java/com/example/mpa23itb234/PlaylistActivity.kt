@@ -42,8 +42,8 @@ class PlaylistActivity : AppCompatActivity() {
         val binder = AddPlaylistDialogBinding.bind(customDialog)
         val builder = MaterialAlertDialogBuilder(this)
         val dialog = builder.setView(customDialog)
-            .setTitle("Playlist Details")
-            .setPositiveButton("ADD"){ dialog, _ ->
+            .setTitle(getString(R.string.playlist_details_title))
+            .setPositiveButton(getString(R.string.add)){ dialog, _ ->
                 val playlistName = binder.playlistName.text
                 val createdBy = binder.yourName.text
                 if(playlistName != null && createdBy != null)
@@ -65,9 +65,10 @@ class PlaylistActivity : AppCompatActivity() {
                 break
             }
         }
-        if(playlistExists) Toast.makeText(this, "Playlist Exist!!", Toast.LENGTH_SHORT).show()
+        if(playlistExists) Toast.makeText(this, getString(R.string.playlist_exists), Toast.LENGTH_SHORT).show()
         else {
             val tempPlaylist = Playlist()
+            tempPlaylist.id = UserLibraryStore.playlistIdFromName(name)
             tempPlaylist.name = name
             tempPlaylist.playlist = ArrayList()
             tempPlaylist.createdBy = createdBy
@@ -75,6 +76,7 @@ class PlaylistActivity : AppCompatActivity() {
             val sdf = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
             tempPlaylist.createdOn = sdf.format(calendar)
             musicPlaylist.ref.add(tempPlaylist)
+            UserLibraryStore.saveAll(this)
             adapter.refreshPlaylist()
         }
     }

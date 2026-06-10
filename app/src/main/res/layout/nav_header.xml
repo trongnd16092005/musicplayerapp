@@ -12,15 +12,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="15dp"
-        android:src="@mipmap/music_player_icon_round"
+        android:src="@drawable/music_player_icon_slash_screen"
         android:contentDescription="@string/app_icon"/>
 
     <TextView
+        android:id="@+id/navAppName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="5dp"
         android:text="@string/text_nav"
         android:textSize="18sp"
         android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/navUserEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/app_name"
+        android:textColor="@color/white"
+        android:textSize="13sp" />
 
 </LinearLayout>

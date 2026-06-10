@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable
 import android.text.SpannableStringBuilder
 import android.text.format.DateUtils
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -39,11 +40,12 @@ private val selectionActivity: Boolean = false)
     }
 
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
-        holder.title.text = musicList[position].title
-        holder.album.text = musicList[position].album
-        holder.duration.text = formatDuration(musicList[position].duration)
-        val artUri = musicList[position].artUri
-        if (!artUri.isNullOrEmpty() && (artUri.startsWith("http") || artUri.startsWith("https"))) {
+        val song = musicList[position]
+        holder.title.text = song.title
+        holder.album.text = displaySubtitle(song)
+        holder.duration.text = formatDuration(song.duration)
+        val artUri = song.artUri
+        if (!artUri.isNullOrEmpty()) {
             Glide.with(context)
                 .load(artUri)
                 .apply(RequestOptions()
@@ -63,20 +65,20 @@ private val selectionActivity: Boolean = false)
                     .create()
                 dialog.show()
                 dialog.window?.setBackgroundDrawable(ColorDrawable(0x99000000.toInt()))
+                val selectedSong = musicList[position]
+                val mainActivity = context as? MainActivity
+                val isOwner = mainActivity?.isCurrentUserOwner(selectedSong) == true
+                bindingMF.editSongBtn.visibility = if (isOwner) View.VISIBLE else View.GONE
+                bindingMF.deleteSongBtn.visibility = if (isOwner) View.VISIBLE else View.GONE
 
                 bindingMF.AddToPNBtn.setOnClickListener {
-                    try {
-                        if(PlayNext.playNextList.isEmpty()){
-                            PlayNext.playNextList.add(PlayerActivity.musicListPA[PlayerActivity.songPosition])
-                            PlayerActivity.songPosition = 0
-                        }
-
-                        PlayNext.playNextList.add(musicList[position])
-                        PlayerActivity.musicListPA = ArrayList()
-                        PlayerActivity.musicListPA.addAll(PlayNext.playNextList)
-                    }catch (e: Exception){
-                        Snackbar.make(context, holder.root,"Play A Song First!!", 3000).show()
+                    val added = addToPlayNext(selectedSong)
+                    val message = if (added) {
+                        context.getString(R.string.added_to_play_next)
+                    } else {
+                        context.getString(R.string.already_in_play_next)
                     }
+                    Snackbar.make(holder.root, message, Snackbar.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
 
@@ -89,18 +91,29 @@ private val selectionActivity: Boolean = false)
                     val dDialog = MaterialAlertDialogBuilder(context)
 //                        .setBackground(ColorDrawable(0x99000000.toInt()))
                         .setView(detailsDialog)
-                        .setPositiveButton("OK"){self, _ -> self.dismiss()}
+                        .setPositiveButton(context.getString(R.string.close_dialog)){self, _ -> self.dismiss()}
                         .setCancelable(false)
                         .create()
                     dDialog.show()
                     dDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED)
                     setDialogBtnBackground(context, dDialog)
                     dDialog.window?.setBackgroundDrawable(ColorDrawable(0x99000000.toInt()))
-                    val str = SpannableStringBuilder().bold { append("DETAILS\n\nName: ") }
+                    val str = SpannableStringBuilder().bold { append(context.getString(R.string.details_title)).append("\n\n").append(context.getString(R.string.details_name)) }
                         .append(musicList[position].title)
-                        .bold { append("\n\nDuration: ") }.append(DateUtils.formatElapsedTime(musicList[position].duration/1000))
-                        .bold { append("\n\nLocation: ") }.append(musicList[position].path)
+                        .bold { append("\n\n").append(context.getString(R.string.details_duration)) }.append(DateUtils.formatElapsedTime(musicList[position].duration/1000))
+                        .bold { append("\n\n").append(context.getString(R.string.details_uploaded_by)) }.append(musicList[position].ownerUsername.ifBlank { "Unknown" })
+                        .bold { append("\n\n").append(context.getString(R.string.details_location)) }.append(musicList[position].path)
                     binder.detailsTV.text = str
+                }
+
+                bindingMF.editSongBtn.setOnClickListener {
+                    dialog.dismiss()
+                    mainActivity?.showEditSongDialog(selectedSong)
+                }
+
+                bindingMF.deleteSongBtn.setOnClickListener {
+                    dialog.dismiss()
+                    mainActivity?.confirmDeleteSong(selectedSong)
                 }
 
                 return@setOnLongClickListener true
@@ -137,6 +150,19 @@ private val selectionActivity: Boolean = false)
         return musicList.size
     }
 
+    private fun displaySubtitle(song: Music): String {
+        val artist = cleanSubtitleValue(song.artist)
+        return if (song.ownerUsername.isNotBlank()) {
+            "Đăng bởi ${song.ownerUsername}"
+        } else {
+            artist.ifBlank { "Unknown" }
+        }
+    }
+
+    private fun cleanSubtitleValue(value: String): String {
+        return if (value.isBlank() || value == "None" || value == "null" || value == "Unknown") "" else value
+    }
+
     fun updateMusicList(searchList : ArrayList<Music>){
         musicList = ArrayList()
         musicList.addAll(searchList)
@@ -148,19 +174,58 @@ private val selectionActivity: Boolean = false)
         intent.putExtra("class", ref)
         ContextCompat.startActivity(context, intent, null)
     }
+
+    private fun addToPlayNext(song: Music): Boolean {
+        if (PlayNext.playNextList.isEmpty()) {
+            currentPlayingSong()?.let { currentSong ->
+                PlayNext.playNextList.add(currentSong)
+                PlayerActivity.songPosition = 0
+            }
+        }
+
+        if (PlayNext.playNextList.any { it.id == song.id && it.path == song.path }) {
+            syncPlayerQueue()
+            return false
+        }
+
+        PlayNext.playNextList.add(song)
+        syncPlayerQueue()
+        return true
+    }
+
+    private fun currentPlayingSong(): Music? {
+        return try {
+            if (PlayerActivity.musicService != null) {
+                PlayerActivity.musicListPA.getOrNull(PlayerActivity.songPosition)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun syncPlayerQueue() {
+        if (PlayerActivity.musicService == null) return
+        PlayerActivity.musicListPA = ArrayList(PlayNext.playNextList)
+    }
+
     private fun addSong(song: Music): Boolean{
-        PlaylistActivity.musicPlaylist.ref[PlaylistDetails.currentPlaylistPos].playlist.forEachIndexed { index, music ->
+        val playlist = PlaylistDetails.currentPlaylistOrNull()?.playlist ?: return false
+        playlist.forEachIndexed { index, music ->
             if(song.id == music.id){
-                PlaylistActivity.musicPlaylist.ref[PlaylistDetails.currentPlaylistPos].playlist.removeAt(index)
+                playlist.removeAt(index)
+                UserLibraryStore.saveAll(context)
                 return false
             }
         }
-        PlaylistActivity.musicPlaylist.ref[PlaylistDetails.currentPlaylistPos].playlist.add(song)
+        playlist.add(song)
+        UserLibraryStore.saveAll(context)
         return true
     }
     fun refreshPlaylist(){
         musicList = ArrayList()
-        musicList = PlaylistActivity.musicPlaylist.ref[PlaylistDetails.currentPlaylistPos].playlist
+        musicList = PlaylistDetails.currentPlaylistOrNull()?.playlist ?: ArrayList()
         notifyDataSetChanged()
     }
 }

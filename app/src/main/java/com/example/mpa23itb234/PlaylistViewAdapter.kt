@@ -31,15 +31,20 @@ class PlaylistViewAdapter(private val context: Context, private var playlistList
         holder.name.text = playlistList[position].name
         holder.name.isSelected = true
         holder.delete.setOnClickListener {
+            val itemPosition = holder.adapterPosition
+            if (itemPosition == RecyclerView.NO_POSITION) return@setOnClickListener
             val builder = MaterialAlertDialogBuilder(context)
-            builder.setTitle(playlistList[position].name)
-                .setMessage("Do you want to delete playlist?")
-                .setPositiveButton("Yes"){ dialog, _ ->
-                    PlaylistActivity.musicPlaylist.ref.removeAt(position)
+            builder.setTitle(playlistList.getOrNull(itemPosition)?.name ?: return@setOnClickListener)
+                .setMessage(context.getString(R.string.delete_playlist_message))
+                .setPositiveButton(context.getString(R.string.yes)){ dialog, _ ->
+                    if (itemPosition in PlaylistActivity.musicPlaylist.ref.indices) {
+                        PlaylistActivity.musicPlaylist.ref.removeAt(itemPosition)
+                    }
+                    UserLibraryStore.saveAll(context)
                     refreshPlaylist()
                     dialog.dismiss()
                 }
-                .setNegativeButton("No"){dialog, _ ->
+                .setNegativeButton(context.getString(R.string.no)){dialog, _ ->
                     dialog.dismiss()
                 }
             val customDialog = builder.create()

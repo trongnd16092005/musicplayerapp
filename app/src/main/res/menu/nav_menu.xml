@@ -6,9 +6,21 @@
         android:title="@string/settings"
         android:icon="@drawable/settings_icon"/>
 
+    <item android:id="@+id/navAllSongs"
+        android:title="@string/all_songs"
+        android:icon="@drawable/music_icon"/>
+
+    <item android:id="@+id/navMySongs"
+        android:title="@string/my_songs"
+        android:icon="@drawable/playlist_icon"/>
+
     <item android:id="@+id/navAbout"
         android:title="@string/about"
         android:icon="@drawable/about_icon"/>
+
+    <item android:id="@+id/navLogout"
+        android:title="@string/logout"
+        android:icon="@drawable/logout_icon"/>
 
     <item android:id="@+id/navExit"
         android:title="@string/exit"

@@ -1,5 +1,6 @@
 package com.example.mpa23itb234
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -8,7 +9,6 @@ import androidx.appcompat.app.AlertDialog
 import com.google.android.material.color.MaterialColors
 import java.io.File
 import java.util.concurrent.TimeUnit
-import kotlin.system.exitProcess
 
 data class Music(
     val id: String,
@@ -17,11 +17,16 @@ data class Music(
     val artist: String,
     val duration: Long = 0,
     val path: String,
-    val artUri: String
+    val artUri: String,
+    val ownerUid: String = "",
+    val ownerUsername: String = "",
+    val musicStoragePath: String = "",
+    val imageStoragePath: String = ""
 )
 
 // Lớp đại diện cho một danh sách phát
 class Playlist {
+    var id: String = ""
     lateinit var name: String
     lateinit var playlist: ArrayList<Music>
     lateinit var createdBy: String
@@ -31,6 +36,10 @@ class Playlist {
 // Lớp quản lý nhiều danh sách phát
 class MusicPlaylist {
     var ref: ArrayList<Playlist> = ArrayList() // Danh sách tất cả playlist
+}
+
+fun Music.isOnlineSong(): Boolean {
+    return path.startsWith("http://") || path.startsWith("https://")
 }
 
 // Hàm định dạng thời lượng từ milliseconds thành chuỗi "mm:ss"
@@ -43,42 +52,76 @@ fun formatDuration(duration: Long): String {
 
 // Lấy ảnh bìa nhúng từ file nhạc
 fun getImgArt(path: String): ByteArray? {
+    if (path.startsWith("http://") || path.startsWith("https://")) return null
+
     val retriever = MediaMetadataRetriever()
-    retriever.setDataSource(path)
-    return retriever.embeddedPicture
+    return try {
+        retriever.setDataSource(path)
+        retriever.embeddedPicture
+    } catch (e: Exception) {
+        null
+    } finally {
+        retriever.release()
+    }
 }
 
 // Cập nhật vị trí bài hát đang phát (tiến/lùi)
 fun setSongPosition(increment: Boolean) {
+    val list = currentPlayerListOrNull()
+    if (list.isNullOrEmpty()) return
+    PlayerActivity.songPosition = PlayerActivity.songPosition.coerceIn(0, list.lastIndex)
     if (!PlayerActivity.repeat) {
         if (increment) {
-            if (PlayerActivity.musicListPA.size - 1 == PlayerActivity.songPosition)
+            if (list.size - 1 == PlayerActivity.songPosition)
                 PlayerActivity.songPosition = 0
             else ++PlayerActivity.songPosition
         } else {
             if (0 == PlayerActivity.songPosition)
-                PlayerActivity.songPosition = PlayerActivity.musicListPA.size - 1
+                PlayerActivity.songPosition = list.size - 1
             else --PlayerActivity.songPosition
         }
     }
 }
 
+fun currentPlayerListOrNull(): ArrayList<Music>? {
+    return try {
+        PlayerActivity.musicListPA
+    } catch (_: UninitializedPropertyAccessException) {
+        null
+    }
+}
+
+fun currentPlayerSongOrNull(): Music? {
+    val list = currentPlayerListOrNull() ?: return null
+    return list.getOrNull(PlayerActivity.songPosition)
+}
+
 // Thoát ứng dụng và dọn dẹp các tài nguyên nhạc
-fun exitApplication() {
-    if (PlayerActivity.musicService != null) {
-        PlayerActivity.musicService!!.audioManager.abandonAudioFocus(PlayerActivity.musicService)
-        PlayerActivity.musicService!!.stopForeground(true)
-        PlayerActivity.musicService!!.mediaPlayer!!.release()
+fun stopMusicPlayback() {
+    val service = PlayerActivity.musicService
+    if (service != null) {
+        service.stopSeekBarUpdates()
+        runCatching { service.audioManager.abandonAudioFocus(service) }
+        runCatching { service.stopForeground(true) }
+        runCatching { service.mediaPlayer?.release() }
+        service.mediaPlayer = null
         PlayerActivity.musicService = null
     }
-    exitProcess(1)
+    PlayerActivity.isPlaying = false
+    PlayerActivity.isPrepared = false
+    PlayerActivity.nowPlayingId = ""
+}
+
+fun exitApplication(context: Context? = null) {
+    stopMusicPlayback()
+    (context as? Activity)?.finishAffinity()
 }
 
 // Kiểm tra bài hát có nằm trong danh sách yêu thích không
-fun favouriteChecker(id: String): Int {
+fun favouriteChecker(song: Music): Int {
     PlayerActivity.isFavourite = false
     FavouriteActivity.favouriteSongs.forEachIndexed { index, music ->
-        if (id == music.id) {
+        if (music.id == song.id && music.path == song.path) {
             PlayerActivity.isFavourite = true
             return index
         }
@@ -90,7 +133,8 @@ fun favouriteChecker(id: String): Int {
 fun checkPlaylist(playlist: ArrayList<Music>): ArrayList<Music> {
     val indicesToRemove = mutableListOf<Int>()
     playlist.forEachIndexed { index, music ->
-        if (!File(music.path).exists()) indicesToRemove.add(index)
+        val isRemoteSong = music.path.startsWith("http://") || music.path.startsWith("https://")
+        if (!isRemoteSong && !File(music.path).exists()) indicesToRemove.add(index)
     }
     indicesToRemove.sortDescending()
     indicesToRemove.forEach { index -> playlist.removeAt(index) }

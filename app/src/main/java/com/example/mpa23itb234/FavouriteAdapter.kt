@@ -62,20 +62,28 @@ class FavouriteAdapter(
                 dialog.show()
                 dialog.window?.setBackgroundDrawable(ColorDrawable(0x99000000.toInt()))  // Nền dialog mờ
 
-                bindingMF.AddToPNBtn.text = "Remove"  // Đổi tên nút thành "Remove"
+                bindingMF.AddToPNBtn.text = context.getString(R.string.remove_from_queue)
 
                 // Xử lý click nút Remove
                 bindingMF.AddToPNBtn.setOnClickListener {
+                    val itemPosition = holder.adapterPosition
+                    if (itemPosition == RecyclerView.NO_POSITION) {
+                        dialog.dismiss()
+                        return@setOnClickListener
+                    }
                     // Không cho xóa bài đang phát hiện tại
-                    if(position == PlayerActivity.songPosition)
+                    if(itemPosition == PlayerActivity.songPosition)
                         Snackbar.make((context as Activity).findViewById(R.id.linearLayoutPN),
-                            "Can't Remove Currently Playing Song.", Snackbar.LENGTH_SHORT).show()
+                            context.getString(R.string.cannot_remove_current_song), Snackbar.LENGTH_SHORT).show()
                     else{
                         // Nếu bài hát xóa nằm sau bài đang phát thì giảm vị trí bài đang phát để đồng bộ
-                        if(PlayerActivity.songPosition < position && PlayerActivity.songPosition != 0) --PlayerActivity.songPosition
-                        PlayNext.playNextList.removeAt(position)
-                        PlayerActivity.musicListPA.removeAt(position)
-                        notifyItemRemoved(position)
+                        if(PlayerActivity.songPosition < itemPosition && PlayerActivity.songPosition != 0) --PlayerActivity.songPosition
+                        val removedSong = PlayNext.playNextList.getOrNull(itemPosition)
+                        if (removedSong != null) {
+                            PlayNext.playNextList.removeAt(itemPosition)
+                            PlayerActivity.musicListPA.removeAll { it.id == removedSong.id && it.path == removedSong.path }
+                            notifyItemRemoved(itemPosition)
+                        }
                     }
                     dialog.dismiss()
                 }
