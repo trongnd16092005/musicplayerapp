@@ -1,0 +1,211 @@
+{
+  "songs": {
+    "-OrZm8eSXjxOY4E8v4da": {
+      "album": "None",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/images%2Fe9_1777659823898.jpg?alt=media&token=959428c3-b03c-4cef-911c-ba194ec56135",
+      "artist": "trong",
+      "duration": 142733,
+      "id": "-OrZm8eSXjxOY4E8v4da",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/music%2Fe9_1777659823898.mp3?alt=media&token=51c64288-69a5-466d-bfda-ac3fa5078483",
+      "timestamp": 1777659845835,
+      "title": "e9"
+    },
+    "-OuhN0TX0JnmZvuqm5Sc": {
+      "album": "None",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/users%2FCmQ3R6egnrdVqVI4ARUZLdLxJ9O2%2Fimages%2F-OuhN0TX0JnmZvuqm5Sc.jpg?alt=media&token=947dede6-b9e8-4b6e-abc0-6ad397ba3564",
+      "artist": "qazqaz",
+      "duration": 142733,
+      "id": "-OuhN0TX0JnmZvuqm5Sc",
+      "imageStoragePath": "users/CmQ3R6egnrdVqVI4ARUZLdLxJ9O2/images/-OuhN0TX0JnmZvuqm5Sc.jpg",
+      "musicStoragePath": "users/CmQ3R6egnrdVqVI4ARUZLdLxJ9O2/music/-OuhN0TX0JnmZvuqm5Sc.mp3",
+      "ownerUid": "CmQ3R6egnrdVqVI4ARUZLdLxJ9O2",
+      "ownerUsername": "qazqaz",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/users%2FCmQ3R6egnrdVqVI4ARUZLdLxJ9O2%2Fmusic%2F-OuhN0TX0JnmZvuqm5Sc.mp3?alt=media&token=dc1f1370-8e76-4695-8c60-0dd80adb1762",
+      "timestamp": 1781025232783,
+      "title": "test"
+    },
+    "song_001": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fonthejourney.jpg?alt=media&token=afcbe4fd-b833-4b55-93a0-4b08f281ed31",
+      "artist": "HoYoMix",
+      "duration": 156000,
+      "id": "song_001",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/On%20the%20Journey.mp3?alt=media&token=7e7c73f2-7c2f-44bc-9053-eb22cc4fbabd",
+      "title": "On the Journey"
+    },
+    "song_002": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fkhovenucuoi.jpg?alt=media&token=2c812019-c501-4b86-8623-691409c5bf48",
+      "artist": "DatG",
+      "duration": 332000,
+      "id": "song_002",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/KhoVeNuCuoi-DatGDuUyen-6114344.mp3?alt=media&token=09a5b154-1882-4f9b-b0df-04c44c955a6d",
+      "title": "Kho Ve Nu Cuoi"
+    },
+    "song_003": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fminhyeunhaudi.jpg?alt=media&token=3d8c79d9-ae46-4d7c-8201-bb20429cf683",
+      "artist": "Bich Phuong",
+      "duration": 232000,
+      "id": "song_003",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/B%C3%8DCH%20PH%C6%AF%C6%A0NG%20%20M%C3%ACnh%20Y%C3%AAu%20Nhau%20%C4%90i%20OFFICIAL%20M%20V.mp3?alt=media&token=36ff2ab6-40e9-49f5-9841-9a4a05bcd7fd",
+      "title": "Minh Yeu Nhau Di"
+    },
+    "song_004": {
+      "album": "none",
+      "artUri": "",
+      "artist": "DatKaa",
+      "duration": 309000,
+      "id": "song_004",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/CHI%E1%BB%80U%20THU%20H%E1%BB%8CA%20B%C3%93NG%20N%C3%80NG%20DATKAA%20x%20QT%20BEATZ%20OFFICIAL%20MUSIC%20VIDEO.mp3?alt=media&token=91b49496-5fda-4cea-8ba2-fe5868bee2eb",
+      "title": "Chieu Thu Hoa Bong Nang"
+    },
+    "song_005": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fdigiuatroirucro.jpg?alt=media&token=38914da9-e4df-40c2-9527-b2776fe4b8e1",
+      "artist": "Ngo Lan Huong",
+      "duration": 220000,
+      "id": "song_005",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/CHI%E1%BB%80U%20THU%20H%E1%BB%8CA%20B%C3%93NG%20N%C3%80NG%20DATKAA%20x%20QT%20BEATZ%20OFFICIAL%20MUSIC%20VIDEO.mp3?alt=media&token=91b49496-5fda-4cea-8ba2-fe5868bee2eb",
+      "title": "Di Giua Troi Ruc Ro"
+    },
+    "song_006": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fdieforyou.jpg?alt=media&token=654c46fc-a76c-4ce3-8ae1-ae428e2e84e5",
+      "artist": "Grabbitz",
+      "duration": 218000,
+      "id": "song_006",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/Die%20For%20You%20ft%20Grabbitz%20Official%20Music%20Video%20VALORANT%20Champions%202021.mp3?alt=media&token=2d585ec8-4cc4-4aa0-8143-ba9c1f0bab8e",
+      "title": "Die For You"
+    },
+    "song_007": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fthedrum.jpg?alt=media&token=2e6f2561-b5c4-461f-abc8-e383ec3bed81",
+      "artist": "Alan Walker",
+      "duration": 187000,
+      "id": "song_007",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/Alan%20Walker%20%20The%20Drum%20Official%20Music%20Video.mp3?alt=media&token=a29592df-3c21-4780-ae71-8f062c91d8c8",
+      "title": "The Drum"
+    },
+    "song_008": {
+      "album": "none",
+      "artUri": "",
+      "artist": "Son Tung",
+      "duration": 245000,
+      "id": "song_008",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/HayTraoChoAnh-SonTungMTPSnoopDogg-6010660.mp3?alt=media&token=6383dd2b-0d18-4897-b669-d3b54f6c2756",
+      "title": "Hay trao cho anh"
+    },
+    "song_009": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Flaanh.jpg?alt=media&token=114c7e0c-56df-4718-8f17-f51d0128f701",
+      "artist": "Pham Lich",
+      "duration": 212000,
+      "id": "song_009",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/LaAnh-PhamLichBMZ-8811329.mp3?alt=media&token=6498f63e-322b-4ed0-84d2-bbe56c15403a",
+      "title": "La Anh"
+    },
+    "song_010": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fmatketnoi.jpg?alt=media&token=506a15ac-dc7b-43b1-930a-ca193cca7c2c",
+      "artist": "Duong Domic",
+      "duration": 207000,
+      "id": "song_010",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/MatKetNoi-DuongDomic-16783113.mp3?alt=media&token=bdfb3b8e-0e57-45af-8b95-ceb1cd699663",
+      "title": "Mat Ket Noi"
+    },
+    "song_011": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fmoonhalo.jpg?alt=media&token=47da3031-35c7-41ef-b882-e04138e30b18",
+      "artist": "HoYoMix",
+      "duration": 204000,
+      "id": "song_011",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/Moon%20Halo%20feat%20%E8%8C%B6%E7%90%86%E7%90%86%20TetraCalyx%20Hanser%20Honkai%20Impact%203Rd%20Everlasting%20Flames%20Animated.mp3?alt=media&token=e24fa816-6a16-48d7-9d87-e6889758859a",
+      "title": "Moon Halo"
+    },
+    "song_012": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fmotbuocyeuvandamdau.jpg?alt=media&token=3e96cc52-5fd9-450a-a402-533b5357fe7a",
+      "artist": "MR.Siro",
+      "duration": 298000,
+      "id": "song_012",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/M%E1%BB%99t%20B%C6%B0%E1%BB%9Bc%20Y%C3%AAu%20V%E1%BA%A1n%20D%E1%BA%B7m%20%C4%90au%20%20Mr%20Siro%20Lyrics.mp3?alt=media&token=7995ecf7-f00f-4b27-b72b-318cf942769e",
+      "title": "Mot Buoc Yeu Van Dam Dau"
+    },
+    "song_013": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fnoitinhyeubatdau.jpg?alt=media&token=7866a69a-81b0-482d-8865-c8b82170659c",
+      "artist": "Bui Anh Tuan",
+      "duration": 276000,
+      "id": "song_013",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/N%C6%A1i%20T%C3%ACnh%20Y%C3%AAu%20B%E1%BA%AFt%20%C4%90%E1%BA%A7u.mp3?alt=media&token=01484cea-0a2a-4194-b298-fff5a945627b",
+      "title": "Noi Tinh Yeu Bat Dau"
+    },
+    "song_014": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Ftranbonho.jpg?alt=media&token=1640206a-cb88-4ada-b191-1ab5c1ef6145",
+      "artist": "Duong Domic",
+      "duration": 172000,
+      "id": "song_014",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/TranBoNho-DuongDomic-16783111.mp3?alt=media&token=e5ea21cb-8b50-4639-b7af-d013285c99e1",
+      "title": "Tran Bo Nho"
+    },
+    "song_015": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fyeutudaumara.jpg?alt=media&token=17d677fb-2950-44d9-9c4b-68c6afcfeb15",
+      "artist": "Lil ZPOET",
+      "duration": 242000,
+      "id": "song_015",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/Y%C3%AAu%20T%E1%BB%AB%20%C4%90%C3%A2u%20M%C3%A0%20Ra%20%20Lil%20ZPOETLyrics%20VideoMeens.mp3?alt=media&token=f20588fd-322b-4aa7-959c-8f856e9340d4",
+      "title": "Yeu Tu Dau Ma Ra"
+    },
+    "song_016": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fnhattrendoi.jpg?alt=media&token=e75d07d8-9eff-47d9-9dc5-752101268a6d",
+      "artist": "VAnh",
+      "duration": 190000,
+      "id": "song_016",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/nhattrendoi.mp3?alt=media&token=350ee118-32e4-486c-a00a-2450605a74d3",
+      "title": "Nhat Tren Doi"
+    },
+    "song_017": {
+      "album": "none",
+      "artUri": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/url%20art%2Fmatmoc.jpg?alt=media&token=25195740-2409-4a6d-a12f-7159bdff0074",
+      "artist": "VAnh",
+      "duration": 220000,
+      "id": "song_017",
+      "path": "https://firebasestorage.googleapis.com/v0/b/music-d6848.firebasestorage.app/o/matmoc.mp3?alt=media&token=7fb573cb-e991-4484-a67f-312c72a1a412",
+      "title": "Mat Moc"
+    }
+  },
+  "userLibraries": {
+    "CmQ3R6egnrdVqVI4ARUZLdLxJ9O2": {
+      "favorites": {
+        "online": {
+          "song_002": true
+        }
+      },
+      "playlists": {
+        "x_1781118831203": {
+          "createdBy": "x",
+          "createdOn": "11 Jun 2026",
+          "id": "x_1781118831203",
+          "name": "x",
+          "songs": {
+            "-OuhN0TX0JnmZvuqm5Sc": true,
+            "song_001": true,
+            "song_004": true
+          }
+        }
+      }
+    }
+  },
+  "users": {
+    "CmQ3R6egnrdVqVI4ARUZLdLxJ9O2": {
+      "createdAt": 1781017089321,
+      "email": "qazqaz@gmail.com",
+      "uid": "CmQ3R6egnrdVqVI4ARUZLdLxJ9O2",
+      "username": "qazqaz"
+    }
+  }
+}
