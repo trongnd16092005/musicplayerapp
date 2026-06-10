@@ -15,14 +15,14 @@ class SelectionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySelectionBinding.inflate(layoutInflater)
-        setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
+        setTheme(MainActivity.currentThemeNav[MainActivity.themeIndex])
         setContentView(binding.root)
         binding.selectionRV.setItemViewCacheSize(30)
         binding.selectionRV.setHasFixedSize(true)
         binding.selectionRV.layoutManager = LinearLayoutManager(this)
         adapter = MusicAdapter(this, MainActivity.MusicListMA, selectionActivity = true)
         binding.selectionRV.adapter = adapter
-        binding.backBtnSA.setOnClickListener { finish() }
+        binding.selectionToolbar.setNavigationOnClickListener { finish() }
         //for search View
         binding.searchViewSA.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean = true
