@@ -78,6 +78,12 @@
     <string name="play_next_note"> Nhấn giữ bài hát bất kỳ để thêm vào hàng chờ &#128522; </string>
     <string name="favourite_note">Chọn bài hát bất kỳ và ấn &#10084; để thêm vào danh sách yêu thích. </string>
     <string name="playlist_note">Ấn ➕ để tạo danh sách phát của riêng bạn</string>
+    <string name="add_playlist">Thêm danh sách phát</string>
+    <string name="playlist_img">Ảnh danh sách phát</string>
+    <string name="playlist_name_placeholder">Tên danh sách phát</string>
+    <string name="playlist_created_by_me">Tạo bởi tôi</string>
+    <string name="scan_library">Quét thư viện</string>
+    <string name="select_songs">Chọn bài hát</string>
     <string name="login_title">Đăng nhập</string>
     <string name="register_title">Đăng ký</string>
     <string name="login_subtitle">Đăng nhập để tiếp tục nghe nhạc</string>

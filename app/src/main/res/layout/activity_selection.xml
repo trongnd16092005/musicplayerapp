@@ -17,7 +17,7 @@
             android:id="@+id/selectionToolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="Select Songs"
+            app:title="@string/select_songs"
             app:titleTextColor="@color/white"
             app:navigationIcon="@drawable/back_icon"
             app:navigationIconTint="@color/white" />

@@ -44,7 +44,7 @@ class PlaylistDetails : AppCompatActivity() {
         binding.playlistDetailsRV.layoutManager = LinearLayoutManager(this)
         adapter = MusicAdapter(this, currentPlaylist.playlist, playlistDetails = true)
         binding.playlistDetailsRV.adapter = adapter
-        binding.backBtnPD.setOnClickListener { finish() }
+        binding.playlistDetailsToolbar.setNavigationOnClickListener { finish() }
         binding.shuffleBtnPD.setOnClickListener {
             val intent = Intent(this, PlayerActivity::class.java)
             intent.putExtra("index", 0)

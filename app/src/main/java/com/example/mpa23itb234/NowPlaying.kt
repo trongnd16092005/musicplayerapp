@@ -37,6 +37,7 @@ class NowPlaying : Fragment() {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Áp theme hiện tại
         requireContext().theme.applyStyle(MainActivity.currentTheme[MainActivity.themeIndex], true)
@@ -98,30 +99,15 @@ class NowPlaying : Fragment() {
     private fun playMusic() {
         if (!PlayerActivity.isPrepared) return
         val service = PlayerActivity.musicService ?: return
-        val player = service.mediaPlayer ?: return
-        PlayerActivity.isPlaying = true
-        try {
-            player.start()
-        } catch (_: IllegalStateException) {
-            PlayerActivity.isPrepared = false
-            return
-        }
+        service.play()
         binding.playPauseBtnNP.setIconResource(R.drawable.pause_icon)
-        service.showNotification(R.drawable.pause_icon)
     }
 
     private fun pauseMusic() {
         if (!PlayerActivity.isPrepared) return
         val service = PlayerActivity.musicService ?: return
-        PlayerActivity.isPlaying = false
-        try {
-            service.mediaPlayer?.pause()
-        } catch (_: IllegalStateException) {
-            PlayerActivity.isPrepared = false
-            return
-        }
+        service.pause()
         binding.playPauseBtnNP.setIconResource(R.drawable.play_icon)
-        service.showNotification(R.drawable.play_icon)
     }
 
     private fun openPlayer() {

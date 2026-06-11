@@ -19,7 +19,7 @@
             android:layout_width="96dp"
             android:layout_height="96dp"
             android:contentDescription="@string/app_icon"
-            android:src="@drawable/music_player_icon_slash_screen"
+            android:src="@drawable/music_player_icon_v2_splash"
             app:layout_constraintBottom_toTopOf="@id/titleText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

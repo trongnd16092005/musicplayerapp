@@ -30,7 +30,7 @@ class FavouriteActivity : AppCompatActivity() {
         favouriteSongs = checkPlaylist(favouriteSongs)
         UserLibraryStore.saveFavourites(this)
 
-        binding.backBtnFA.setOnClickListener { finish() }
+        binding.favouriteToolbar.setNavigationOnClickListener { finish() }
 
         binding.favouriteRV.setHasFixedSize(true)
         binding.favouriteRV.setItemViewCacheSize(13)

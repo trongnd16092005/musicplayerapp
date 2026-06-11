@@ -17,7 +17,7 @@
             android:id="@+id/aboutToolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="About"
+            app:title="@string/about"
             app:titleTextColor="@color/white"
             app:navigationIcon="@drawable/back_icon"
             app:navigationIconTint="@color/white" />
@@ -51,7 +51,7 @@
                     <com.google.android.material.imageview.ShapeableImageView
                         android:layout_width="120dp"
                         android:layout_height="120dp"
-                        android:src="@drawable/music_player_icon_slash_screen"
+                        android:src="@drawable/music_player_icon_v2_splash"
                         app:shapeAppearanceOverlay="@style/ShapeAppearance.MaterialComponents.LargeComponent"
                         android:padding="8dp"
                         android:background="?attr/themeColor" />
@@ -60,17 +60,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
-                        android:text="Music Player App"
+                        android:text="@string/app_name"
                         android:textColor="?attr/themeColor"
                         android:textSize="24sp"
                         android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Version 2.0.1"
-                        android:textSize="14sp"
-                        android:alpha="0.6" />
 
                     <TextView
                         android:id="@+id/aboutText"

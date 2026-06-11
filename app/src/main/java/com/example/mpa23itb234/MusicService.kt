@@ -167,6 +167,9 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
                 updatePlayerStoppedUi()
                 true
             }
+            mediaPlayer?.setOnCompletionListener {
+                prevNextSong(increment = true, context = baseContext)
+            }
             mediaPlayer?.setOnPreparedListener {
                 PlayerActivity.isPrepared = true
                 updatePlayerPreparedUi(it)

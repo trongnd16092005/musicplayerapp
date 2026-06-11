@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
-import android.media.MediaPlayer
 import android.media.audiofx.AudioEffect
 import android.media.audiofx.LoudnessEnhancer
 import android.net.Uri
@@ -31,7 +30,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.mpa23itb234.databinding.ActivityPlayerBinding
 import com.example.mpa23itb234.databinding.AudioBoosterBinding
 
-class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCompletionListener {
+class PlayerActivity : AppCompatActivity(), ServiceConnection {
 
     companion object {
         lateinit var musicListPA: ArrayList<Music>
@@ -278,70 +277,21 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
         window?.statusBarColor = bgColor
     }
 
-    // Tạo MediaPlayer và chuẩn bị phát
     private fun createMediaPlayer() {
-        try {
-            val currentSong = currentPlayerSongOrNull() ?: return
-            val service = musicService ?: return
-            setPlayerLoading(true)
-            if (service.mediaPlayer == null) service.mediaPlayer = MediaPlayer()
-            val player = service.mediaPlayer ?: return
-            player.reset()
-            player.setDataSource(currentSong.path)
-            player.setOnCompletionListener(this)
-            player.setOnErrorListener { _, _, _ ->
-                setPlayerLoading(false)
-                true
-            }
-            player.setOnPreparedListener {
-                setPlayerLoading(false)
-                binding.tvSeekBarStart.text = formatDuration(it.currentPosition.toLong())
-                binding.tvSeekBarEnd.text = formatDuration(it.duration.toLong())
-                binding.seekBarPA.progress = 0
-                binding.seekBarPA.max = it.duration
-                nowPlayingId = currentSong.id
-                loudnessEnhancer = LoudnessEnhancer(it.audioSessionId)
-                loudnessEnhancer.enabled = true
-                playMusic()
-            }
-            player.prepareAsync()
-        } catch (e: Exception) {
-            setPlayerLoading(false)
-            Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show()
-        }
+        musicService?.createMediaPlayer()
     }
 
-    // Phát nhạc và hiển thị notification
     private fun playMusic() {
         if (!isPrepared) {
             Toast.makeText(this, getString(R.string.song_loading), Toast.LENGTH_SHORT).show()
             return
         }
-        val player = musicService?.mediaPlayer ?: return
-        isPlaying = true
-        try {
-            player.start()
-        } catch (_: IllegalStateException) {
-            isPrepared = false
-            return
-        }
-        binding.playPauseBtnPA.setIconResource(R.drawable.pause_icon)
-        musicService?.showNotification(R.drawable.pause_icon)
+        musicService?.play()
     }
 
-    // Tạm dừng nhạc và cập nhật notification
     private fun pauseMusic() {
         if (!isPrepared) return
-        val player = musicService?.mediaPlayer ?: return
-        isPlaying = false
-        try {
-            player.pause()
-        } catch (_: IllegalStateException) {
-            isPrepared = false
-            return
-        }
-        binding.playPauseBtnPA.setIconResource(R.drawable.play_icon)
-        musicService?.showNotification(R.drawable.play_icon)
+        musicService?.pause()
     }
 
     // Chuyển bài tiếp theo hoặc trước đó
@@ -377,16 +327,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection, MediaPlayer.OnCom
 
     override fun onServiceDisconnected(name: ComponentName?) {
         musicService = null
-    }
-
-    // Khi bài kết thúc, tự động chuyển bài
-    override fun onCompletion(mp: MediaPlayer?) {
-        setSongPosition(increment = true)
-        createMediaPlayer()
-        setLayout()
-
-        // Cập nhật NowPlaying UI nếu đang mở
-        currentPlayerSongOrNull()?.let { NowPlaying.updateIfReady(applicationContext, it, isPlaying) }
     }
 
     // Hiện bottom sheet để chọn hẹn giờ dừng nhạc

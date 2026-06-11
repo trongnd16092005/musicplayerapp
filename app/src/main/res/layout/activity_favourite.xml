@@ -62,7 +62,7 @@
             app:backgroundTint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:contentDescription="Shuffle Favorites"/>
+            android:contentDescription="@string/shuffle_btn" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

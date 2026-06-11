@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="15dp"
-        android:src="@drawable/music_player_icon_slash_screen"
+        android:src="@drawable/music_player_icon_v2_splash"
         android:contentDescription="@string/app_icon"/>
 
     <TextView

@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     private var currentUsername: String = ""
     private var isUploading = false
     private var loadSongsJob: Job? = null
+    private var loadGeneration = 0
     private val pickAudioLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         musicUri = uri
         if (uri != null) currentUploadField?.setText(R.string.music_selected)
@@ -70,6 +71,9 @@ class MainActivity : AppCompatActivity() {
         val currentGradient = arrayOf(R.drawable.gradient_pink, R.drawable.gradient_blue, R.drawable.gradient_purple, R.drawable.gradient_green, R.drawable.gradient_black)
         var sortOrder: Int = 0
         val sortingList = arrayOf(MediaStore.Audio.Media.DATE_ADDED + " DESC", MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.SIZE + " DESC")
+        private var cachedOnlineSongsUid: String? = null
+        private var cachedOnlineSongsLoaded = false
+        private var cachedOnlineSongs: ArrayList<Music> = ArrayList()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -258,7 +262,7 @@ class MainActivity : AppCompatActivity() {
             refreshMusicLibrary()
         }
 
-        loadLocalSongsAsync(loadFirebaseAfterLocal = true)
+        loadMusicLibrary()
     }
 
     private fun refreshMusicLibrary() {
@@ -267,24 +271,37 @@ class MainActivity : AppCompatActivity() {
         musicListSearch = ArrayList()
         if (::musicAdapter.isInitialized) musicAdapter.updateMusicList(MusicListMA)
         binding.totalSongs.text = getString(R.string.loading_songs)
-        loadLocalSongsAsync(loadFirebaseAfterLocal = true, stopRefreshWhenDone = true)
+        loadMusicLibrary(forceRemote = true, stopRefreshWhenDone = true)
     }
 
-    private fun loadLocalSongsAsync(loadFirebaseAfterLocal: Boolean, stopRefreshWhenDone: Boolean = false) {
+    private fun loadMusicLibrary(forceRemote: Boolean = false, stopRefreshWhenDone: Boolean = false) {
         loadSongsJob?.cancel()
+        val generation = ++loadGeneration
+        if (!forceRemote && mergeCachedOnlineSongs()) updateMusicListDisplay()
+        loadFirebaseSongsAfterRefresh(stopRefreshWhenDone, generation, forceRemote)
+        loadLocalSongsAsync(generation)
+    }
+
+    private fun loadLocalSongsAsync(generation: Int) {
         loadSongsJob = lifecycleScope.launch {
             val localSongs = withContext(Dispatchers.IO) {
                 getAllAudio()
             }
-            if (!::binding.isInitialized || isFinishing || isDestroyed) return@launch
+            if (generation != loadGeneration || !::binding.isInitialized || isFinishing || isDestroyed) return@launch
             mergeSongs(localSongs)
             updateMusicListDisplay()
-            if (loadFirebaseAfterLocal) {
-                loadFirebaseSongsAfterRefresh(stopRefreshWhenDone)
-            } else if (stopRefreshWhenDone) {
-                binding.refreshLayout.isRefreshing = false
-            }
         }
+    }
+
+    private fun mergeCachedOnlineSongs(): Boolean {
+        val uid = auth.currentUser?.uid ?: return false
+        if (!cachedOnlineSongsLoaded || cachedOnlineSongsUid != uid) return false
+        mergeSongs(cachedOnlineSongs)
+        FirebaseLibraryStore.loadOnlineLibrary(MusicListMA) {
+            UserLibraryStore.savePlaylists(this@MainActivity)
+            updateMusicListDisplay()
+        }
+        return true
     }
 
     private fun mergeSongs(songs: List<Music>) {
@@ -516,6 +533,7 @@ class MainActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 val music = Music(id, title, ownerName, ownerName, duration, musicUrl, imageUrl, ownerUid, ownerName, musicStoragePath, imageStoragePath)
                 MusicListMA.add(music)
+                cacheOnlineSong(music)
                 if (::musicAdapter.isInitialized) musicAdapter.updateMusicList(MusicListMA)
                 binding.totalSongs.text = getString(R.string.total_songs_count, MusicListMA.size)
                 setUploadLoading(false)
@@ -673,6 +691,7 @@ class MainActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 val updatedSong = song.copy(title = newTitle, artUri = imageUrl, imageStoragePath = imageStoragePath)
                 replaceSongInLists(updatedSong)
+                cacheOnlineSong(updatedSong)
                 Toast.makeText(this, getString(R.string.updated), Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { showUploadError(it) }
@@ -700,6 +719,7 @@ class MainActivity : AppCompatActivity() {
                 deleteStorageFile(song.musicStoragePath)
                 deleteStorageFile(song.imageStoragePath)
                 removeSongFromRuntimeLists(song)
+                removeCachedOnlineSong(song)
                 UserLibraryStore.saveAll(this)
                 if (::musicAdapter.isInitialized) musicAdapter.updateMusicList(MusicListMA)
                 binding.totalSongs.text = getString(R.string.total_songs_count, MusicListMA.size)
@@ -751,17 +771,50 @@ class MainActivity : AppCompatActivity() {
         list.removeAll { it.id == song.id && it.path == song.path }
     }
 
-    private fun loadFirebaseSongsAfterRefresh(stopRefreshWhenDone: Boolean = true) {
+    private fun cacheOnlineSong(song: Music) {
+        val uid = auth.currentUser?.uid ?: return
+        if (!song.isOnlineSong()) return
+        if (cachedOnlineSongsUid != uid) {
+            cachedOnlineSongsUid = uid
+            cachedOnlineSongs = ArrayList()
+        }
+        cachedOnlineSongsLoaded = true
+        val index = cachedOnlineSongs.indexOfFirst { it.id == song.id }
+        if (index >= 0) cachedOnlineSongs[index] = song else cachedOnlineSongs.add(song)
+    }
+
+    private fun removeCachedOnlineSong(song: Music) {
+        cachedOnlineSongs.removeAll { it.id == song.id && it.path == song.path }
+    }
+
+    private fun loadFirebaseSongsAfterRefresh(
+        stopRefreshWhenDone: Boolean = true,
+        generation: Int = loadGeneration,
+        forceRemote: Boolean = false
+    ) {
+        val uid = auth.currentUser?.uid
+        if (!forceRemote && cachedOnlineSongsLoaded && cachedOnlineSongsUid == uid) {
+            if (stopRefreshWhenDone) binding.refreshLayout.isRefreshing = false
+            return
+        }
+
         database.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                if (generation != loadGeneration || !::binding.isInitialized || isFinishing || isDestroyed) return
                 Log.d("firebase1", "Starting to fetch songs from Firebase...")
                 Log.d("firebase2", "DataSnapshot received with ${snapshot.childrenCount} songs")
 
+                val onlineSongs = ArrayList<Music>()
                 for (songSnap in snapshot.children) {
                     val music = musicFromSnapshot(songSnap)
-                    if (MusicListMA.none { it.id == music.id }) MusicListMA.add(music)
+                    onlineSongs.add(music)
                 }
+                cachedOnlineSongsUid = uid
+                cachedOnlineSongsLoaded = true
+                cachedOnlineSongs = onlineSongs
+                mergeSongs(onlineSongs)
                 FirebaseLibraryStore.loadOnlineLibrary(MusicListMA) {
+                    if (generation != loadGeneration || !::binding.isInitialized || isFinishing || isDestroyed) return@loadOnlineLibrary
                     updateMusicListDisplay()
                     UserLibraryStore.savePlaylists(this@MainActivity)
                     if (stopRefreshWhenDone) binding.refreshLayout.isRefreshing = false
@@ -769,6 +822,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
+                if (generation != loadGeneration || !::binding.isInitialized || isFinishing || isDestroyed) return
                 Toast.makeText(this@MainActivity, getString(R.string.firebase_connection_error, error.message), Toast.LENGTH_LONG).show()
                 if (stopRefreshWhenDone) binding.refreshLayout.isRefreshing = false
             }

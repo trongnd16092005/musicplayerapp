@@ -1,88 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="72dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="8dp"
-    android:layout_margin="8dp"
-    app:cardBackgroundColor="?attr/themeColor"
+    android:layout_height="wrap_content"
+    android:background="?attr/themeColor"
     tools:context=".NowPlaying">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/songImgNP"
+        android:layout_width="70dp"
+        android:layout_height="55dp"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginVertical="5dp"
+        android:src="@drawable/music_player_icon_slash_screen"
+        app:shapeAppearanceOverlay="@style/curved" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/nextBtnNP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="10dp"
+        android:backgroundTint="?attr/themeColor"
+        app:icon="@drawable/next_icon"
+        app:iconSize="40dp"
+        app:iconTint="@color/white" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/playPauseBtnNP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginHorizontal="5dp"
+        android:layout_toStartOf="@id/nextBtnNP"
+        android:backgroundTint="?attr/themeColor"
+        app:icon="@drawable/play_icon"
+        app:iconSize="40dp"
+        app:iconTint="@color/white" />
+
+    <TextView
+        android:id="@+id/songNameNP"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp">
+        android:layout_height="60dp"
+        android:layout_toStartOf="@id/playPauseBtnNP"
+        android:layout_toEndOf="@id/songImgNP"
+        android:ellipsize="marquee"
+        android:gravity="center"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:text="@string/song_name"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/songImgNP"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/curved"
-            android:src="@drawable/music_player_icon_slash_screen"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-        <TextView
-            android:id="@+id/songNameNP"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
-            android:text="@string/song_name"
-            android:textSize="16sp"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:singleLine="true"
-            app:layout_constraintStart_toEndOf="@id/songImgNP"
-            app:layout_constraintEnd_toStartOf="@+id/playPauseBtnNP"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/playPauseBtnNP"
-            style="@style/Widget.MaterialComponents.Button.Icon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            app:icon="@drawable/play_icon"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="32dp"
-            app:iconTint="@color/white"
-            android:backgroundTint="@android:color/transparent"
-            app:layout_constraintEnd_toStartOf="@+id/nextBtnNP"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="4dp"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/nextBtnNP"
-            style="@style/Widget.MaterialComponents.Button.Icon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            app:icon="@drawable/next_icon"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="32dp"
-            app:iconTint="@color/white"
-            android:backgroundTint="@android:color/transparent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</com.google.android.material.card.MaterialCardView>
+</RelativeLayout>
