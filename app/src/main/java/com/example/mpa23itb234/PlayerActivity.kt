@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
-import android.media.audiofx.AudioEffect
 import android.media.audiofx.LoudnessEnhancer
 import android.net.Uri
 import android.os.Build
@@ -20,7 +19,6 @@ import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
@@ -54,10 +52,11 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         var isFavourite: Boolean = false
         var fIndex: Int = -1
         lateinit var loudnessEnhancer: LoudnessEnhancer
-    }
 
-    private val equalizerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        // Không cần xử lý kết quả, panel Equalizer hệ thống tự áp dụng hiệu ứng.
+        /** Giải phóng bộ tăng âm nếu nó đã được tạo cho phiên phát hiện tại. */
+        fun releaseLoudnessEnhancer() {
+            if (::loudnessEnhancer.isInitialized) runCatching { loudnessEnhancer.release() }
+        }
     }
 
     // region Khởi tạo và sự kiện giao diện
@@ -146,24 +145,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
             } else {
                 repeat = false
                 binding.repeatBtnPA.setColorFilter(ContextCompat.getColor(this, R.color.cool_pink))
-            }
-        }
-
-        // Nút Equalizer: mở panel hệ thống
-        binding.equalizerBtnPA.setOnClickListener {
-            try {
-                val player = musicService?.mediaPlayer
-                if (!isPrepared || player == null) {
-                    Toast.makeText(this, getString(R.string.song_loading), Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                val eqIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
-                eqIntent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
-                eqIntent.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, baseContext.packageName)
-                eqIntent.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
-                equalizerLauncher.launch(eqIntent)
-            } catch (e: Exception) {
-                Toast.makeText(this, getString(R.string.equalizer_not_supported), Toast.LENGTH_SHORT).show()
             }
         }
 

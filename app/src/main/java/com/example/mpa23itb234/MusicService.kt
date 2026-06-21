@@ -190,6 +190,7 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
                 PlayerActivity.isPrepared = true
                 updatePlayerPreparedUi(it)
                 PlayerActivity.nowPlayingId = song.id
+                PlayerActivity.releaseLoudnessEnhancer()
                 PlayerActivity.loudnessEnhancer = LoudnessEnhancer(it.audioSessionId)
                 PlayerActivity.loudnessEnhancer.enabled = true
                 playMusic()
@@ -375,14 +376,25 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
 
     // region Vòng đời và truy cập MediaPlayer an toàn
 
-    /** Giữ service tồn tại để tiếp tục phát nhạc khi Activity rời màn hình. */
+    /** Không tự tạo lại service sau khi tiến trình bị hệ thống kết thúc. */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
-    /** Dừng callback seek bar trước khi service bị hủy. */
+    /** Giải phóng toàn bộ tài nguyên phát nhạc khi service bị hủy. */
     override fun onDestroy() {
         stopSeekBarUpdates()
+        PlayerActivity.isPlaying = false
+        PlayerActivity.isPrepared = false
+        PlayerActivity.nowPlayingId = ""
+        runCatching { audioManager.abandonAudioFocus(this) }
+        runCatching { stopForeground(true) }
+        runCatching { mediaPlayer?.stop() }
+        runCatching { mediaPlayer?.release() }
+        mediaPlayer = null
+        PlayerActivity.releaseLoudnessEnhancer()
+        runCatching { mediaSession.release() }
+        if (PlayerActivity.musicService === this) PlayerActivity.musicService = null
         super.onDestroy()
     }
 

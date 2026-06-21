@@ -12,7 +12,6 @@
     <string name="start_tv">00:00</string>
     <string name="end_tv">Đang tải..</string>
     <string name="repeat_btn">Lặp lại</string>
-    <string name="equalizer_btn">Cân bằng</string>
     <string name="timer_btn">Hẹn giờ</string>
     <string name="share_btn">Chia sẻ</string>
     <string name="open">Mở</string>
@@ -117,7 +116,6 @@
     <string name="delete_own_song_only">Bạn chỉ có thể xóa bài hát của mình</string>
     <string name="deleted">Đã xóa bài hát</string>
     <string name="song_loading">Bài hát vẫn đang tải...</string>
-    <string name="equalizer_not_supported">Thiết bị không hỗ trợ bộ cân bằng âm thanh</string>
     <string name="stop_timer">Dừng hẹn giờ</string>
     <string name="stop_timer_message">Bạn có muốn dừng hẹn giờ không?</string>
     <string name="share_music_file">Chia sẻ bài hát</string>
