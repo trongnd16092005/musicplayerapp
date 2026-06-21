@@ -15,7 +15,7 @@ class SelectionActivity : AppCompatActivity() {
     /** Khởi tạo danh sách chọn bài và bộ lọc tìm kiếm. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(MainActivity.ACTIVE_NAV_THEME)
+        setTheme(MainActivity.ACTIVE_THEME)
         binding = ActivitySelectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.selectionRV.setItemViewCacheSize(30)
