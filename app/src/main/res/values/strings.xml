@@ -97,6 +97,12 @@
     <string name="select_image">Chọn ảnh</string>
     <string name="loading_songs">Đang tải bài hát...</string>
     <string name="upload_in_progress">Đang tải bài hát lên, vui lòng đợi...</string>
+    <string name="uploading_audio">Đang tải tệp nhạc...</string>
+    <string name="uploading_image">Đang tải ảnh bìa...</string>
+    <string name="saving_song">Đang lưu thông tin bài hát...</string>
+    <string name="upload_complete">Hoàn tất</string>
+    <string name="upload_progress_value">%1$d%%</string>
+    <string name="upload_progress_zero">0%</string>
     <string name="add">Thêm</string>
     <string name="cancel">Hủy</string>
     <string name="title_required">Vui lòng nhập tên bài hát</string>
