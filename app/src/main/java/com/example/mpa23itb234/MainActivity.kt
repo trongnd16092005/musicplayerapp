@@ -1,10 +1,8 @@
 package com.example.mpa23itb234
 
 import android.annotation.SuppressLint
-import android.content.ContentValues.TAG
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
@@ -36,6 +34,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+
+/**
+ * Màn hình chính của ứng dụng.
+ *
+ * Lớp chịu trách nhiệm hiển thị thư viện nhạc local/online, điều hướng các màn
+ * chức năng và quản lý thao tác tải lên, sửa, xóa bài hát của người dùng.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -64,11 +69,9 @@ class MainActivity : AppCompatActivity() {
         lateinit var MusicListMA: ArrayList<Music>
         lateinit var musicListSearch: ArrayList<Music>
         var search: Boolean = false
-        var themeIndex: Int = 0
-
-        val currentTheme = arrayOf(R.style.coolPink, R.style.coolBlue, R.style.coolPurple, R.style.coolGreen, R.style.coolBlack)
-        val currentThemeNav = arrayOf(R.style.coolPinkNav, R.style.coolBlueNav, R.style.coolPurpleNav, R.style.coolGreenNav, R.style.coolBlackNav)
-        val currentGradient = arrayOf(R.drawable.gradient_pink, R.drawable.gradient_blue, R.drawable.gradient_purple, R.drawable.gradient_green, R.drawable.gradient_black)
+        val ACTIVE_THEME = R.style.coolBlue
+        val ACTIVE_NAV_THEME = R.style.coolBlueNav
+        val ACTIVE_GRADIENT = R.drawable.gradient_blue
         var sortOrder: Int = 0
         val sortingList = arrayOf(MediaStore.Audio.Media.DATE_ADDED + " DESC", MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.SIZE + " DESC")
         private var cachedOnlineSongsUid: String? = null
@@ -76,12 +79,12 @@ class MainActivity : AppCompatActivity() {
         private var cachedOnlineSongs: ArrayList<Music> = ArrayList()
     }
 
+    // region Khởi tạo và điều hướng
+
+    /** Khởi tạo theme, Firebase, giao diện chính và các sự kiện điều hướng. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Load theme người dùng chọn từ SharedPreferences
-        val themeEditor = getSharedPreferences("THEMES", MODE_PRIVATE)
-        themeIndex = themeEditor.getInt("themeIndex", 0)
-        setTheme(currentThemeNav[themeIndex])
+        setTheme(ACTIVE_NAV_THEME)
 
         auth = FirebaseAuth.getInstance()
         if (auth.currentUser == null) {
@@ -99,11 +102,6 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         updateNavHeader()
 
-        // Cảnh báo nếu dùng theme đen (black) mà không bật chế độ Dark Mode của hệ thống
-        if (themeIndex == 4 && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
-            Toast.makeText(this, getString(R.string.black_theme_dark_mode), Toast.LENGTH_LONG).show()
-        }
-
         // Khởi tạo kết nối Firebase Realtime Database tại node "songs"
         database = FirebaseDatabase.getInstance().getReference("songs")
         storage = FirebaseStorage.getInstance()
@@ -115,11 +113,11 @@ class MainActivity : AppCompatActivity() {
             initializeLayout() // Nếu đã có quyền thì load giao diện và dữ liệu
         }
 
-        // Các nút điều hướng đến các activity khác6+++++++++++++++++
+        // Các nút điều hướng nhanh trên màn hình chính.
         binding.shuffleBtn.setOnClickListener {
             val intent = Intent(this@MainActivity, PlayerActivity::class.java)
-            intent.putExtra("index", 0)
-            intent.putExtra("class", "MainActivity")
+            intent.putExtra(PlayerNavigation.EXTRA_INDEX, 0)
+            intent.putExtra(PlayerNavigation.EXTRA_SOURCE, PlayerNavigation.SOURCE_MAIN_SHUFFLE)
             startActivity(intent)
         }
         binding.favouriteBtn.setOnClickListener {
@@ -158,6 +156,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Hiển thị username hoặc email hiện tại trên phần đầu Navigation Drawer. */
     private fun updateNavHeader() {
         val header = binding.navView.getHeaderView(0)
         header.findViewById<TextView>(R.id.navUserEmail)?.text = currentUsername.ifBlank {
@@ -165,6 +164,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Đọc hồ sơ người dùng từ node users/{uid} và tạo dữ liệu dự phòng khi cần. */
     private fun loadCurrentUserProfile() {
         val user = auth.currentUser ?: return
         val usersRef = FirebaseDatabase.getInstance().getReference("users").child(user.uid)
@@ -192,6 +192,7 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
+    /** Xác nhận đăng xuất, dừng nhạc và xóa dữ liệu runtime của tài khoản hiện tại. */
     private fun showLogoutDialog() {
         val builder = MaterialAlertDialogBuilder(this)
         builder.setTitle(getString(R.string.logout))
@@ -211,6 +212,7 @@ class MainActivity : AppCompatActivity() {
         setDialogBtnBackground(this, customDialog)
     }
 
+    /** Mở màn hình xác thực và xóa toàn bộ Activity cũ khỏi back stack. */
     private fun openAuthActivity() {
         val intent = Intent(this, AuthActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -218,7 +220,11 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
 
-    // Yêu cầu quyền truy cập đọc file âm thanh tùy SDK
+    // endregion
+
+    // region Quyền truy cập và thư viện nhạc
+
+    /** Yêu cầu quyền đọc file âm thanh tương ứng với phiên bản Android. */
     private fun requestRuntimePermission(): Boolean {
         val permission = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
             android.Manifest.permission.READ_EXTERNAL_STORAGE
@@ -232,7 +238,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    // Xử lý kết quả cấp quyền
+    /** Bắt đầu tải thư viện sau khi người dùng cấp quyền đọc âm thanh. */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 13 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -240,13 +246,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Xử lý nút trên toolbar (navigation drawer toggle)
+    /** Chuyển sự kiện nút Home trên ActionBar cho Navigation Drawer. */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (toggle.onOptionsItemSelected(item)) return true
         return super.onOptionsItemSelected(item)
     }
 
-    // Hàm chính khởi tạo giao diện và dữ liệu
+    /** Khởi tạo RecyclerView, thao tác kéo để tải lại và bắt đầu nạp bài hát. */
     private fun initializeLayout() {
         search = false
         MusicListMA = ArrayList()
@@ -265,6 +271,7 @@ class MainActivity : AppCompatActivity() {
         loadMusicLibrary()
     }
 
+    /** Xóa danh sách hiện tại và tải mới cả bài hát local lẫn Firebase. */
     private fun refreshMusicLibrary() {
         search = false
         MusicListMA.clear()
@@ -274,6 +281,10 @@ class MainActivity : AppCompatActivity() {
         loadMusicLibrary(forceRemote = true, stopRefreshWhenDone = true)
     }
 
+    /**
+     * Tải thư viện local và online song song.
+     * [forceRemote] bỏ qua cache online; [stopRefreshWhenDone] kết thúc hiệu ứng refresh.
+     */
     private fun loadMusicLibrary(forceRemote: Boolean = false, stopRefreshWhenDone: Boolean = false) {
         loadSongsJob?.cancel()
         val generation = ++loadGeneration
@@ -282,6 +293,7 @@ class MainActivity : AppCompatActivity() {
         loadLocalSongsAsync(generation)
     }
 
+    /** Quét MediaStore ở luồng IO và chỉ cập nhật kết quả thuộc lần tải mới nhất. */
     private fun loadLocalSongsAsync(generation: Int) {
         loadSongsJob = lifecycleScope.launch {
             val localSongs = withContext(Dispatchers.IO) {
@@ -293,6 +305,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Ghép cache online đúng tài khoản vào danh sách và đồng bộ thư viện người dùng. */
     private fun mergeCachedOnlineSongs(): Boolean {
         val uid = auth.currentUser?.uid ?: return false
         if (!cachedOnlineSongsLoaded || cachedOnlineSongsUid != uid) return false
@@ -304,6 +317,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    /** Ghép các bài hát chưa tồn tại vào danh sách chung, tránh trùng id và đường dẫn. */
     private fun mergeSongs(songs: List<Music>) {
         songs.forEach { song ->
             if (MusicListMA.none { it.id == song.id && it.path == song.path }) {
@@ -312,6 +326,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Cập nhật adapter và tổng số bài hát theo chế độ tìm kiếm hiện tại. */
     private fun updateMusicListDisplay() {
         if (!::musicAdapter.isInitialized) return
         if (search) {
@@ -322,7 +337,7 @@ class MainActivity : AppCompatActivity() {
         binding.totalSongs.text = getString(R.string.total_songs_count, MusicListMA.size)
     }
 
-    // Lấy danh sách bài hát từ bộ nhớ thiết bị
+    /** Đọc metadata các bài hát local từ MediaStore theo thứ tự người dùng chọn. */
     @SuppressLint("Range")
     private fun getAllAudio(): ArrayList<Music> {
         val tempList = ArrayList<Music>()
@@ -362,13 +377,13 @@ class MainActivity : AppCompatActivity() {
         return tempList
     }
 
-    // Hiện thanh Now Playing nếu có bài đang phát
+    /** Hiển thị mini player khi MusicService đang tồn tại. */
     override fun onResume() {
         super.onResume()
         if (PlayerActivity.musicService != null) binding.nowPlaying.visibility = View.VISIBLE
     }
 
-    // Khi thoát activity, nếu không còn bài phát, thoát app luôn
+    /** Hủy tác vụ tải và giải phóng service khi Activity đóng mà nhạc không phát. */
     override fun onDestroy() {
         loadSongsJob?.cancel()
         super.onDestroy()
@@ -377,10 +392,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Tạo menu tìm kiếm trên toolbar
+    /** Tạo ô tìm kiếm và lọc danh sách theo tên bài hát. */
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.search_view_menu, menu)
-        findViewById<LinearLayout>(R.id.linearLayoutNav)?.setBackgroundResource(currentGradient[themeIndex])
+        findViewById<LinearLayout>(R.id.linearLayoutNav)?.setBackgroundResource(ACTIVE_GRADIENT)
         val searchView = menu?.findItem(R.id.searchView)?.actionView as SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = true
@@ -398,6 +413,11 @@ class MainActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
+    // endregion
+
+    // region Tải bài hát lên Firebase
+
+    /** Hiển thị form chọn tên, file nhạc và ảnh trước khi tải lên. */
     private fun uploadMusicDialog() {
         if (isUploading) {
             Toast.makeText(this, getString(R.string.upload_in_progress), Toast.LENGTH_SHORT).show()
@@ -449,14 +469,17 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /** Mở trình chọn file âm thanh của hệ thống. */
     private fun pickAudio() {
         pickAudioLauncher.launch("audio/*")
     }
 
+    /** Mở trình chọn ảnh bìa của hệ thống. */
     private fun pickImage() {
         pickImageLauncher.launch("image/*")
     }
 
+    /** Tải file nhạc và ảnh lên Firebase Storage, sau đó lưu metadata. */
     private fun uploadToFirebase(title: String) {
         val selectedMusicUri = musicUri ?: return
         val uid = auth.currentUser?.uid ?: return
@@ -489,6 +512,7 @@ class MainActivity : AppCompatActivity() {
             .addOnFailureListener { showUploadError(it) }
     }
 
+    /** Đọc thời lượng file âm thanh được chọn bằng MediaMetadataRetriever. */
     private fun getAudioDuration(uri: Uri): Long {
         val retriever = MediaMetadataRetriever()
         return try {
@@ -501,6 +525,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Lưu metadata bài hát đã tải lên node songs trong Realtime Database. */
     private fun saveToDatabase(
         id: String,
         title: String,
@@ -542,6 +567,11 @@ class MainActivity : AppCompatActivity() {
             .addOnFailureListener { showUploadError(it) }
     }
 
+    // endregion
+
+    // region Chuyển đổi dữ liệu Firebase
+
+    /** Chuyển một DataSnapshot Firebase thành model Music an toàn với dữ liệu cũ. */
     private fun musicFromSnapshot(songSnap: DataSnapshot): Music {
         val ownerUid = cleanText(
             songSnap.child("ownerUid").value ?: songSnap.child("uploadedBy").value,
@@ -570,11 +600,13 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    /** Chuẩn hóa dữ liệu text null/rỗng từ Firebase về giá trị dự phòng. */
     private fun cleanText(value: Any?, fallback: String): String {
         val text = value?.toString().orEmpty()
         return if (text.isBlank() || text == "null") fallback else text
     }
 
+    /** Chuyển duration từ các kiểu dữ liệu Firebase thường gặp sang Long. */
     private fun parseDuration(value: Any?): Long {
         return when (value) {
             is Long -> value
@@ -585,11 +617,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Kết thúc trạng thái tải và thông báo lỗi upload bằng tiếng Việt. */
     private fun showUploadError(error: Exception) {
         setUploadLoading(false)
         Toast.makeText(this, getString(R.string.upload_failed, error.localizedMessage ?: ""), Toast.LENGTH_LONG).show()
     }
 
+    /** Khóa/mở nút upload để ngăn người dùng gửi nhiều tác vụ cùng lúc. */
     private fun setUploadLoading(loading: Boolean) {
         isUploading = loading
         if (::binding.isInitialized) {
@@ -598,6 +632,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // endregion
+
+    // region Lọc và quản lý bài hát
+
+    /** Hiển thị lại toàn bộ thư viện nhạc. */
     private fun showAllSongs() {
         search = false
         if (::musicAdapter.isInitialized) musicAdapter.updateMusicList(MusicListMA)
@@ -605,6 +644,7 @@ class MainActivity : AppCompatActivity() {
         binding.root.closeDrawers()
     }
 
+    /** Chỉ hiển thị các bài online thuộc quyền sở hữu của tài khoản hiện tại. */
     private fun showMySongs() {
         val uid = auth.currentUser?.uid.orEmpty()
         musicListSearch = ArrayList(MusicListMA.filter { it.ownerUid == uid })
@@ -614,10 +654,12 @@ class MainActivity : AppCompatActivity() {
         binding.root.closeDrawers()
     }
 
+    /** Kiểm tra người dùng hiện tại có quyền sửa/xóa bài hát hay không. */
     fun isCurrentUserOwner(song: Music): Boolean {
         return song.ownerUid.isNotBlank() && song.ownerUid == auth.currentUser?.uid
     }
 
+    /** Hiển thị form sửa tên và ảnh của bài hát thuộc người dùng hiện tại. */
     fun showEditSongDialog(song: Music) {
         if (!isCurrentUserOwner(song)) {
             Toast.makeText(this, getString(R.string.edit_own_song_only), Toast.LENGTH_SHORT).show()
@@ -661,6 +703,7 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /** Tải ảnh mới nếu có rồi cập nhật metadata bài hát. */
     private fun updateSong(song: Music, newTitle: String) {
         val selectedImageUri = imageUri
         if (selectedImageUri != null) {
@@ -679,6 +722,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Cập nhật metadata trên Firebase và đồng bộ các danh sách runtime. */
     private fun updateSongMetadata(song: Music, newTitle: String, imageUrl: String, imageStoragePath: String) {
         val updates = mapOf<String, Any>(
             "title" to newTitle,
@@ -697,6 +741,7 @@ class MainActivity : AppCompatActivity() {
             .addOnFailureListener { showUploadError(it) }
     }
 
+    /** Kiểm tra quyền sở hữu và yêu cầu xác nhận trước khi xóa bài hát. */
     fun confirmDeleteSong(song: Music) {
         if (!isCurrentUserOwner(song)) {
             Toast.makeText(this, getString(R.string.delete_own_song_only), Toast.LENGTH_SHORT).show()
@@ -713,6 +758,7 @@ class MainActivity : AppCompatActivity() {
         setDialogBtnBackground(this, dialog)
     }
 
+    /** Xóa metadata, file Storage và mọi tham chiếu runtime của bài hát. */
     private fun deleteSong(song: Music) {
         database.child(song.id).removeValue()
             .addOnSuccessListener {
@@ -728,6 +774,7 @@ class MainActivity : AppCompatActivity() {
             .addOnFailureListener { showUploadError(it) }
     }
 
+    /** Xóa bài hát khỏi danh sách chính, tìm kiếm, yêu thích, hàng chờ và playlist. */
     private fun removeSongFromRuntimeLists(song: Music) {
         removeSong(MusicListMA, song)
         try {
@@ -741,12 +788,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Xóa file Firebase Storage khi đường dẫn lưu trữ hợp lệ. */
     private fun deleteStorageFile(storagePath: String) {
         if (storagePath.isNotBlank()) {
             storage.reference.child(storagePath).delete()
         }
     }
 
+    /** Thay model bài hát mới trong mọi danh sách đang giữ bản sao của bài hát. */
     private fun replaceSongInLists(updatedSong: Music) {
         replaceSong(MusicListMA, updatedSong)
         try {
@@ -762,15 +811,18 @@ class MainActivity : AppCompatActivity() {
         if (::musicAdapter.isInitialized) musicAdapter.updateMusicList(if (search) musicListSearch else MusicListMA)
     }
 
+    /** Thay một bài hát trong danh sách dựa theo id. */
     private fun replaceSong(list: ArrayList<Music>, updatedSong: Music) {
         val index = list.indexOfFirst { it.id == updatedSong.id }
         if (index >= 0) list[index] = updatedSong
     }
 
+    /** Xóa đúng bài hát dựa theo cặp id và đường dẫn. */
     private fun removeSong(list: ArrayList<Music>, song: Music) {
         list.removeAll { it.id == song.id && it.path == song.path }
     }
 
+    /** Thêm hoặc cập nhật bài online trong cache của tài khoản hiện tại. */
     private fun cacheOnlineSong(song: Music) {
         val uid = auth.currentUser?.uid ?: return
         if (!song.isOnlineSong()) return
@@ -783,10 +835,12 @@ class MainActivity : AppCompatActivity() {
         if (index >= 0) cachedOnlineSongs[index] = song else cachedOnlineSongs.add(song)
     }
 
+    /** Xóa bài hát khỏi cache online của phiên làm việc. */
     private fun removeCachedOnlineSong(song: Music) {
         cachedOnlineSongs.removeAll { it.id == song.id && it.path == song.path }
     }
 
+    /** Tải danh sách songs từ Firebase và ghép với thư viện local hiện có. */
     private fun loadFirebaseSongsAfterRefresh(
         stopRefreshWhenDone: Boolean = true,
         generation: Int = loadGeneration,
@@ -828,4 +882,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+    // endregion
 }

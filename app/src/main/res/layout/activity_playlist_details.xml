@@ -1,142 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/themeColor"
+    android:background="@color/white"
     tools:context=".PlaylistDetails">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBar"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/playlistContent"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:background="@android:color/transparent"
-        app:elevation="0dp">
+        android:layout_height="0dp"
+        android:background="@color/white"
+        app:layout_constraintBottom_toTopOf="@id/bottomActions"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.appbar.CollapsingToolbarLayout
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:contentScrim="?attr/themeColor"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:titleEnabled="false">
+            android:layout_height="300dp"
+            android:background="@android:color/transparent"
+            app:elevation="0dp">
 
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/playlistImgPD"
+            <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/music_player_icon_slash_screen"
-                android:contentDescription="@string/playlist_img"
-                app:layout_collapseMode="parallax" />
+                app:contentScrim="?attr/themeColor"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:titleEnabled="false">
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/gradient_black"
-                android:alpha="0.4"/>
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/playlistImgPD"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/playlist_img"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/music_player_icon_slash_screen"
+                    app:layout_collapseMode="parallax" />
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/playlistDetailsToolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:layout_collapseMode="pin"
-                app:navigationIcon="@drawable/back_icon"
-                app:navigationIconTint="@color/white"
-                app:titleTextColor="@color/white" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0.4"
+                    android:background="@drawable/gradient_black" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:orientation="vertical"
-                android:padding="24dp">
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/playlistDetailsToolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_collapseMode="pin"
+                    app:navigationIcon="@drawable/back_icon"
+                    app:navigationIconTint="@color/white"
+                    app:titleTextColor="@color/white" />
 
-                <TextView
-                    android:id="@+id/playlistNamePD"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/playlist_name_placeholder"
-                    android:textColor="@color/white"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
+                    android:layout_gravity="bottom"
+                    android:orientation="vertical"
+                    android:padding="24dp">
 
-                <TextView
-                    android:id="@+id/moreInfoPD"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/playlist_created_by_me"
-                    android:textColor="@color/white"
-                    android:alpha="0.8"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/playlistNamePD"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/playlist_name_placeholder"
+                        android:textColor="@color/white"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
 
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-    </com.google.android.material.appbar.AppBarLayout>
+                    <TextView
+                        android:id="@+id/moreInfoPD"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:alpha="0.8"
+                        android:text="@string/playlist_created_by_me"
+                        android:textColor="@color/white"
+                        android:textSize="14sp" />
+                </LinearLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/playlistDetailsRV"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
+            android:background="@color/white"
             android:clipToPadding="false"
             android:padding="8dp"
+            android:paddingBottom="80dp"
             android:scrollbarThumbVertical="@drawable/scroll_bar_icon"
             android:scrollbars="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/bottomActions"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-        <LinearLayout
-            android:id="@+id/bottomActions"
-            android:layout_width="match_parent"
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/themeColor"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addBtnPD"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:background="?attr/themeColor"
-            app:layout_constraintBottom_toBottomOf="parent">
+            android:layout_weight="1"
+            android:text="@string/add_song"
+            android:textColor="@color/white"
+            app:icon="@drawable/add_icon"
+            app:iconTint="@color/white" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/addBtnPD"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/add_song"
-                android:textColor="@color/white"
-                app:icon="@drawable/add_icon"
-                app:iconTint="@color/white" />
+        <View
+            android:layout_width="2dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_vertical"
+            android:background="@color/white" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/removeAllPD"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/remove_all"
-                android:textColor="@color/white"
-                app:icon="@drawable/remove_icon"
-                app:iconTint="@color/white" />
-
-        </LinearLayout>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/shuffleBtnPD"
-            android:layout_width="wrap_content"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/removeAllPD"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:src="@drawable/shuffle_icon"
-            android:visibility="invisible"
-            android:contentDescription="@string/shuffle_btn"
-            app:backgroundTint="@color/white"
-            app:tint="?attr/themeColor"
-            app:layout_constraintBottom_toTopOf="@id/bottomActions"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_weight="1"
+            android:text="@string/remove_all"
+            android:textColor="@color/white"
+            app:icon="@drawable/remove_icon"
+            app:iconTint="@color/white" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/shuffleBtnPD"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/shuffle_btn"
+        android:src="@drawable/shuffle_icon"
+        android:visibility="invisible"
+        app:backgroundTint="@color/white"
+        app:layout_constraintBottom_toTopOf="@id/bottomActions"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="?attr/themeColor" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

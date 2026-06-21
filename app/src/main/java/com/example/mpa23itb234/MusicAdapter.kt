@@ -23,6 +23,7 @@ import com.example.mpa23itb234.databinding.DetailsViewBinding
 import com.example.mpa23itb234.databinding.MoreFeaturesBinding
 import com.example.mpa23itb234.databinding.MusicViewBinding
 
+/** Adapter hiển thị bài hát và xử lý menu thao tác của từng bài. */
 class MusicAdapter(private val context: Context, private var musicList: ArrayList<Music>, private val playlistDetails: Boolean = false,
 private val selectionActivity: Boolean = false)
     : RecyclerView.Adapter<MyHolder>() {
@@ -35,10 +36,12 @@ private val selectionActivity: Boolean = false)
         val root = binding.root
     }
 
+    /** Tạo ViewHolder từ layout music_view. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyHolder {
         return MyHolder(MusicViewBinding.inflate(LayoutInflater.from(context), parent, false))
     }
 
+    /** Gắn metadata, ảnh bìa và sự kiện click/nhấn giữ cho một bài hát. */
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
         val song = musicList[position]
         holder.title.text = song.title
@@ -56,7 +59,7 @@ private val selectionActivity: Boolean = false)
         } else {
             holder.image.setImageResource(R.drawable.music_player_icon_slash_screen)
         }
-        //for play next feature
+        // Nhấn giữ để mở các thao tác hàng chờ, thông tin, sửa và xóa.
         if(!selectionActivity)
             holder.root.setOnLongClickListener {
                 val customDialog = LayoutInflater.from(context).inflate(R.layout.more_features, holder.root, false)
@@ -89,7 +92,6 @@ private val selectionActivity: Boolean = false)
                     binder.detailsTV.setTextColor(Color.WHITE)
                     binder.root.setBackgroundColor(Color.TRANSPARENT)
                     val dDialog = MaterialAlertDialogBuilder(context)
-//                        .setBackground(ColorDrawable(0x99000000.toInt()))
                         .setView(detailsDialog)
                         .setPositiveButton(context.getString(R.string.close_dialog)){self, _ -> self.dismiss()}
                         .setCancelable(false)
@@ -122,7 +124,7 @@ private val selectionActivity: Boolean = false)
         when{
             playlistDetails ->{
                 holder.root.setOnClickListener {
-                    sendIntent(ref = "PlaylistDetailsAdapter", pos = position)
+                        sendIntent(ref = PlayerNavigation.SOURCE_PLAYLIST, pos = position)
                 }
             }
             selectionActivity ->{
@@ -137,19 +139,21 @@ private val selectionActivity: Boolean = false)
             else ->{
                 holder.root.setOnClickListener {
                 when{
-                    MainActivity.search -> sendIntent(ref = "MusicAdapterSearch", pos = position)
+                    MainActivity.search -> sendIntent(ref = PlayerNavigation.SOURCE_MUSIC_SEARCH, pos = position)
                     musicList[position].id == PlayerActivity.nowPlayingId ->
-                        sendIntent(ref = "NowPlaying", pos = PlayerActivity.songPosition)
-                    else->sendIntent(ref="MusicAdapter", pos = position) } }
+                        sendIntent(ref = PlayerNavigation.SOURCE_NOW_PLAYING, pos = PlayerActivity.songPosition)
+                    else->sendIntent(ref = PlayerNavigation.SOURCE_MUSIC_ADAPTER, pos = position) } }
         }
 
          }
     }
 
+    /** Trả số bài hát đang hiển thị. */
     override fun getItemCount(): Int {
         return musicList.size
     }
 
+    /** Tạo dòng phụ ưu tiên tên người tải lên, sau đó mới dùng nghệ sĩ. */
     private fun displaySubtitle(song: Music): String {
         val artist = cleanSubtitleValue(song.artist)
         return if (song.ownerUsername.isNotBlank()) {
@@ -159,22 +163,26 @@ private val selectionActivity: Boolean = false)
         }
     }
 
+    /** Loại bỏ các giá trị placeholder không nên hiển thị. */
     private fun cleanSubtitleValue(value: String): String {
         return if (value.isBlank() || value == "None" || value == "null" || value == "Unknown") "" else value
     }
 
+    /** Thay dữ liệu adapter bằng một bản sao của danh sách mới. */
     fun updateMusicList(searchList : ArrayList<Music>){
         musicList = ArrayList()
         musicList.addAll(searchList)
         notifyDataSetChanged()
     }
+    /** Mở PlayerActivity với nguồn danh sách và vị trí được chọn. */
     private fun sendIntent(ref: String, pos: Int){
         val intent = Intent(context, PlayerActivity::class.java)
-        intent.putExtra("index", pos)
-        intent.putExtra("class", ref)
+        intent.putExtra(PlayerNavigation.EXTRA_INDEX, pos)
+        intent.putExtra(PlayerNavigation.EXTRA_SOURCE, ref)
         ContextCompat.startActivity(context, intent, null)
     }
 
+    /** Thêm bài vào hàng chờ và giữ bài đang phát ở đầu khi cần. */
     private fun addToPlayNext(song: Music): Boolean {
         if (PlayNext.playNextList.isEmpty()) {
             currentPlayingSong()?.let { currentSong ->
@@ -193,6 +201,7 @@ private val selectionActivity: Boolean = false)
         return true
     }
 
+    /** Lấy bài đang phát hiện tại để tạo hàng chờ nhất quán. */
     private fun currentPlayingSong(): Music? {
         return try {
             if (PlayerActivity.musicService != null) {
@@ -205,11 +214,13 @@ private val selectionActivity: Boolean = false)
         }
     }
 
+    /** Đồng bộ PlayNext vào hàng phát runtime khi service đang hoạt động. */
     private fun syncPlayerQueue() {
         if (PlayerActivity.musicService == null) return
         PlayerActivity.musicListPA = ArrayList(PlayNext.playNextList)
     }
 
+    /** Thêm hoặc loại bài hát khỏi playlist đang chỉnh sửa. */
     private fun addSong(song: Music): Boolean{
         val playlist = PlaylistDetails.currentPlaylistOrNull()?.playlist ?: return false
         playlist.forEachIndexed { index, music ->
@@ -223,6 +234,7 @@ private val selectionActivity: Boolean = false)
         UserLibraryStore.saveAll(context)
         return true
     }
+    /** Nạp lại playlist hiện tại vào adapter. */
     fun refreshPlaylist(){
         musicList = ArrayList()
         musicList = PlaylistDetails.currentPlaylistOrNull()?.playlist ?: ArrayList()

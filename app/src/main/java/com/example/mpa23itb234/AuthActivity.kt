@@ -13,15 +13,22 @@ import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.database.FirebaseDatabase
 
+/**
+ * Màn hình xác thực duy nhất của ứng dụng.
+ *
+ * Hỗ trợ cả đăng nhập và đăng ký bằng Firebase Authentication; thông tin
+ * username bổ sung được lưu tại node users/{uid}.
+ */
 class AuthActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAuthBinding
     private lateinit var auth: FirebaseAuth
     private var isRegisterMode = false
 
+    /** Khởi tạo Firebase Auth, bỏ qua màn hình nếu đã đăng nhập và gắn sự kiện form. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(R.style.coolPink)
+        setTheme(MainActivity.ACTIVE_THEME)
 
         auth = FirebaseAuth.getInstance()
         if (auth.currentUser != null) {
@@ -39,6 +46,7 @@ class AuthActivity : AppCompatActivity() {
         }
     }
 
+    /** Chuyển giao diện giữa chế độ đăng nhập và đăng ký. */
     private fun updateMode() {
         clearErrors()
         binding.titleText.setText(if (isRegisterMode) R.string.register_title else R.string.login_title)
@@ -49,6 +57,7 @@ class AuthActivity : AppCompatActivity() {
         binding.confirmPasswordLayout.visibility = if (isRegisterMode) View.VISIBLE else View.GONE
     }
 
+    /** Kiểm tra form rồi gọi API đăng nhập hoặc tạo tài khoản Firebase. */
     private fun submitAuthForm() {
         clearErrors()
 
@@ -81,6 +90,7 @@ class AuthActivity : AppCompatActivity() {
         }
     }
 
+    /** Xác thực dữ liệu đầu vào và hiển thị lỗi ngay tại từng trường. */
     private fun validateForm(email: String, username: String, password: String, confirmPassword: String): Boolean {
         var isValid = true
 
@@ -110,6 +120,7 @@ class AuthActivity : AppCompatActivity() {
         return isValid
     }
 
+    /** Xóa lỗi cũ trước mỗi lần đổi chế độ hoặc gửi form. */
     private fun clearErrors() {
         binding.emailLayout.error = null
         binding.usernameLayout.error = null
@@ -117,6 +128,7 @@ class AuthActivity : AppCompatActivity() {
         binding.confirmPasswordLayout.error = null
     }
 
+    /** Lưu hồ sơ cơ bản vào Realtime Database sau khi đăng ký thành công. */
     private fun saveUserProfile(username: String, email: String) {
         val uid = auth.currentUser?.uid ?: return
         val userMap = mapOf(
@@ -137,10 +149,12 @@ class AuthActivity : AppCompatActivity() {
             }
     }
 
+    /** Hiển thị thông báo xác thực đã được chuyển sang nội dung tiếng Việt. */
     private fun showAuthError(error: Exception?) {
         Toast.makeText(this, authErrorMessage(error), Toast.LENGTH_LONG).show()
     }
 
+    /** Ánh xạ exception Firebase thành thông báo thân thiện cho người dùng. */
     private fun authErrorMessage(error: Exception?): String {
         val message = error?.message.orEmpty()
         return when {
@@ -163,11 +177,13 @@ class AuthActivity : AppCompatActivity() {
         }
     }
 
+    /** Khóa nút thao tác trong lúc Firebase đang xử lý yêu cầu. */
     private fun setLoading(isLoading: Boolean) {
         binding.authButton.isEnabled = !isLoading
         binding.switchModeButton.isEnabled = !isLoading
     }
 
+    /** Mở màn hình chính, xóa back stack và reset phiên đồng bộ thư viện. */
     private fun openMainActivity() {
         FirebaseLibraryStore.resetSession()
         val intent = Intent(this, MainActivity::class.java)

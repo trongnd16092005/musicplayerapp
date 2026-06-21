@@ -1,6 +1,5 @@
 package com.example.mpa23itb234
 
-import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
@@ -17,6 +16,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
+/** Màn hình quản lý tài khoản, giao diện và cách sắp xếp thư viện nhạc. */
 class SettingsActivity : AppCompatActivity() {
 
     lateinit var binding: ActivitySettingsBinding
@@ -25,27 +25,16 @@ class SettingsActivity : AppCompatActivity() {
     private val songsRef = FirebaseDatabase.getInstance().getReference("songs")
     private var currentUsername = ""
 
+    /** Khởi tạo dữ liệu tài khoản và gắn sự kiện cho các tùy chọn cài đặt. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(MainActivity.currentThemeNav[MainActivity.themeIndex])
+        setTheme(MainActivity.ACTIVE_NAV_THEME)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.title = getString(R.string.settings)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         auth = FirebaseAuth.getInstance()
         loadAccountInfo()
-        when(MainActivity.themeIndex){
-            0 -> binding.coolPinkTheme.setBackgroundColor(Color.YELLOW)
-            1 -> binding.coolBlueTheme.setBackgroundColor(Color.YELLOW)
-            2 -> binding.coolPurpleTheme.setBackgroundColor(Color.YELLOW)
-            3 -> binding.coolGreenTheme.setBackgroundColor(Color.YELLOW)
-            4 -> binding.coolBlackTheme.setBackgroundColor(Color.YELLOW)
-        }
-        binding.coolPinkTheme.setOnClickListener { saveTheme(0) }
-        binding.coolBlueTheme.setOnClickListener { saveTheme(1) }
-        binding.coolPurpleTheme.setOnClickListener { saveTheme(2) }
-        binding.coolGreenTheme.setOnClickListener { saveTheme(3) }
-        binding.coolBlackTheme.setOnClickListener { saveTheme(4) }
         binding.changeUsernameBtn.setOnClickListener { showChangeUsernameDialog() }
         binding.changePasswordBtn.setOnClickListener { showChangePasswordDialog() }
         binding.sortBtn.setOnClickListener {
@@ -72,6 +61,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /** Xử lý nút quay lại trên ActionBar. */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             finish()
@@ -80,6 +70,7 @@ class SettingsActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    /** Tải username từ Firebase và email từ Firebase Authentication. */
     private fun loadAccountInfo() {
         val user = auth.currentUser ?: return
         usersRef.child(user.uid).addListenerForSingleValueEvent(object : ValueEventListener {
@@ -96,11 +87,13 @@ class SettingsActivity : AppCompatActivity() {
         })
     }
 
+    /** Cập nhật hai trường thông tin tài khoản trên giao diện. */
     private fun updateAccountViews(username: String, email: String) {
         binding.accountUsername.text = username
         binding.accountEmail.text = email
     }
 
+    /** Hiển thị form đổi username và kiểm tra dữ liệu rỗng. */
     private fun showChangeUsernameDialog() {
         val input = EditText(this).apply {
             hint = getString(R.string.new_username)
@@ -130,6 +123,7 @@ class SettingsActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /** Cập nhật username tại users/{uid} và các bài hát thuộc người dùng. */
     private fun updateUsername(newUsername: String) {
         val user = auth.currentUser ?: return
         val userUpdates = mapOf<String, Any>(
@@ -151,6 +145,7 @@ class SettingsActivity : AppCompatActivity() {
             }
     }
 
+    /** Đồng bộ tên chủ sở hữu trên mọi bài hát có ownerUid tương ứng. */
     private fun updateOwnedSongsUsername(uid: String, newUsername: String) {
         songsRef.orderByChild("ownerUid").equalTo(uid)
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -171,6 +166,7 @@ class SettingsActivity : AppCompatActivity() {
             })
     }
 
+    /** Hiển thị form nhập mật khẩu hiện tại và mật khẩu mới. */
     private fun showChangePasswordDialog() {
         val currentPassword = passwordInput(getString(R.string.current_password))
         val newPassword = passwordInput(getString(R.string.new_password))
@@ -211,6 +207,7 @@ class SettingsActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /** Tạo EditText mật khẩu dùng chung cho dialog đổi mật khẩu. */
     private fun passwordInput(hintText: String): EditText {
         return EditText(this).apply {
             hint = hintText
@@ -219,6 +216,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /** Xác thực lại tài khoản trước khi gọi Firebase cập nhật mật khẩu. */
     private fun updatePassword(currentPassword: String, newPassword: String) {
         val user = auth.currentUser ?: return
         val email = user.email ?: return
@@ -238,24 +236,4 @@ class SettingsActivity : AppCompatActivity() {
             }
     }
 
-    private fun saveTheme(index: Int){
-        if(MainActivity.themeIndex != index){
-            val editor = getSharedPreferences("THEMES", MODE_PRIVATE).edit()
-            editor.putInt("themeIndex", index)
-            editor.apply()
-            val builder = MaterialAlertDialogBuilder(this)
-            builder.setTitle(getString(R.string.apply_theme_title))
-                .setMessage(getString(R.string.apply_theme_message))
-                .setPositiveButton(getString(R.string.yes)){ _, _ ->
-                    exitApplication(this)
-                }
-                .setNegativeButton(getString(R.string.no)){dialog, _ ->
-                    dialog.dismiss()
-                }
-            val customDialog = builder.create()
-            customDialog.show()
-
-            setDialogBtnBackground(this, customDialog)
-        }
-    }
 }

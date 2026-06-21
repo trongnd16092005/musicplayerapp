@@ -8,29 +8,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.mpa23itb234.databinding.ActivityFavouriteBinding
 
+/** Màn hình hiển thị và phát các bài hát yêu thích của tài khoản hiện tại. */
 class FavouriteActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityFavouriteBinding  // ViewBinding để truy cập views
-    private lateinit var adapter: FavouriteAdapter          // Adapter cho RecyclerView hiển thị bài hát yêu thích
+    private lateinit var binding: ActivityFavouriteBinding
+    private lateinit var adapter: FavouriteAdapter
 
     companion object {
         var favouriteSongs: ArrayList<Music> = ArrayList()
         var favouritesChanged: Boolean = false
     }
 
+    /** Nạp danh sách yêu thích hợp lệ và khởi tạo lưới bài hát. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Đặt theme ứng dụng theo lựa chọn hiện tại trong MainActivity
-        setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
-        // Khởi tạo ViewBinding
+        setTheme(MainActivity.ACTIVE_THEME)
         binding = ActivityFavouriteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Kiểm tra và loại bỏ các bài hát không còn tồn tại trong danh sách yêu thích
         favouriteSongs = checkPlaylist(favouriteSongs)
         UserLibraryStore.saveFavourites(this)
 
-        binding.favouriteToolbar.setNavigationOnClickListener { finish() }
+        binding.backBtnFA.setOnClickListener { finish() }
 
         binding.favouriteRV.setHasFixedSize(true)
         binding.favouriteRV.setItemViewCacheSize(13)
@@ -44,19 +43,18 @@ class FavouriteActivity : AppCompatActivity() {
 
         if(favouriteSongs.isNotEmpty()) binding.instructionFV.visibility = View.GONE
 
-        // Xử lý sự kiện nút shuffle
         binding.shuffleBtnFA.setOnClickListener {
             val intent = Intent(this, PlayerActivity::class.java)
-            intent.putExtra("index", 0)                // Bắt đầu phát từ bài đầu tiên
-            intent.putExtra("class", "FavouriteShuffle")  // Thông tin để PlayerActivity biết phát shuffle từ Favourite
+            intent.putExtra(PlayerNavigation.EXTRA_INDEX, 0)
+            intent.putExtra(PlayerNavigation.EXTRA_SOURCE, PlayerNavigation.SOURCE_FAVOURITE_SHUFFLE)
             startActivity(intent)
         }
     }
 
+    /** Cập nhật adapter khi trạng thái yêu thích thay đổi từ màn Player. */
     @SuppressLint("NotifyDataSetChanged")
     override fun onResume() {
         super.onResume()
-        // Nếu danh sách yêu thích đã thay đổi, cập nhật adapter
         if(favouritesChanged) {
             adapter.updateFavourites(favouriteSongs)
             favouritesChanged = false

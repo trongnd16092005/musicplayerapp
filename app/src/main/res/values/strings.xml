@@ -45,7 +45,6 @@
     <string name="topic_feedback">Nội dung góp ý</string>
     <string name="email_feedback">Email (không bắt buộc)</string>
     <string name="send">Gửi</string>
-    <string name="set_theme">Điều Chỉnh Theme</string>
     <string name="account_settings">Tài khoản</string>
     <string name="loading_account">Đang tải thông tin tài khoản...</string>
     <string name="account_username_label">Tên người dùng</string>
@@ -65,8 +64,6 @@
     <string name="sort_song_title">Tên bài hát</string>
     <string name="sort_file_size">Dung lượng tệp</string>
     <string name="sorting_title">Sắp xếp bài hát</string>
-    <string name="apply_theme_title">Áp dụng giao diện</string>
-    <string name="apply_theme_message">Bạn có muốn áp dụng giao diện này không?</string>
     <string name="yes">Có</string>
     <string name="no">Không</string>
     <string name="ok">Có</string>
@@ -119,7 +116,6 @@
     <string name="edit_own_song_only">Bạn chỉ có thể sửa bài hát của mình</string>
     <string name="delete_own_song_only">Bạn chỉ có thể xóa bài hát của mình</string>
     <string name="deleted">Đã xóa bài hát</string>
-    <string name="black_theme_dark_mode">Giao diện đen hoạt động tốt nhất khi bật chế độ tối</string>
     <string name="song_loading">Bài hát vẫn đang tải...</string>
     <string name="equalizer_not_supported">Thiết bị không hỗ trợ bộ cân bằng âm thanh</string>
     <string name="stop_timer">Dừng hẹn giờ</string>

@@ -14,6 +14,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.mpa23itb234.databinding.FragmentNowPlayingBinding
 import kotlin.math.abs
+
+/** Mini player hiển thị bài đang phát ở cuối màn hình chính. */
 class NowPlaying : Fragment() {
 
     private var touchStartX = 0f
@@ -21,8 +23,9 @@ class NowPlaying : Fragment() {
 
     companion object {
         @SuppressLint("StaticFieldLeak")
-        lateinit var binding: FragmentNowPlayingBinding  // Binding layout fragment
+        lateinit var binding: FragmentNowPlayingBinding
 
+        /** Đồng bộ ảnh, tên và nút Play/Pause khi fragment đã được tạo. */
         fun updateIfReady(context: Context, song: Music, playing: Boolean) {
             try {
                 binding.songNameNP.isSelected = true
@@ -37,10 +40,11 @@ class NowPlaying : Fragment() {
         }
     }
 
+    /** Khởi tạo mini player, thao tác điều khiển và cử chỉ vuốt ngang để đóng. */
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Áp theme hiện tại
-        requireContext().theme.applyStyle(MainActivity.currentTheme[MainActivity.themeIndex], true)
+        requireContext().theme.applyStyle(MainActivity.ACTIVE_THEME, true)
         val rootView = inflater.inflate(R.layout.fragment_now_playing, container, false)
         binding = FragmentNowPlayingBinding.bind(rootView)
         binding.root.visibility = View.INVISIBLE  // Ẩn fragment lúc đầu
@@ -88,6 +92,7 @@ class NowPlaying : Fragment() {
         return rootView
     }
 
+    /** Hiển thị và đồng bộ mini player khi quay lại màn hình chính. */
     override fun onResume() {
         super.onResume()
         if (PlayerActivity.musicService != null) {
@@ -96,6 +101,7 @@ class NowPlaying : Fragment() {
         }
     }
 
+    /** Yêu cầu MusicService tiếp tục phát bài hiện tại. */
     private fun playMusic() {
         if (!PlayerActivity.isPrepared) return
         val service = PlayerActivity.musicService ?: return
@@ -103,6 +109,7 @@ class NowPlaying : Fragment() {
         binding.playPauseBtnNP.setIconResource(R.drawable.pause_icon)
     }
 
+    /** Yêu cầu MusicService tạm dừng bài hiện tại. */
     private fun pauseMusic() {
         if (!PlayerActivity.isPrepared) return
         val service = PlayerActivity.musicService ?: return
@@ -110,13 +117,15 @@ class NowPlaying : Fragment() {
         binding.playPauseBtnNP.setIconResource(R.drawable.play_icon)
     }
 
+    /** Mở PlayerActivity tại đúng bài hát đang phát. */
     private fun openPlayer() {
         val intent = Intent(requireContext(), PlayerActivity::class.java)
-        intent.putExtra("index", PlayerActivity.songPosition)
-        intent.putExtra("class", "NowPlaying")
+        intent.putExtra(PlayerNavigation.EXTRA_INDEX, PlayerActivity.songPosition)
+        intent.putExtra(PlayerNavigation.EXTRA_SOURCE, PlayerNavigation.SOURCE_NOW_PLAYING)
         ContextCompat.startActivity(requireContext(), intent, null)
     }
 
+    /** Dừng phát, dừng service và ẩn mini player. */
     private fun closeMiniPlayer() {
         stopMusicPlayback()
         context?.stopService(Intent(requireContext(), MusicService::class.java))
