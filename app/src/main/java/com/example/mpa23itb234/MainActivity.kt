@@ -15,10 +15,12 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
@@ -54,6 +56,10 @@ class MainActivity : AppCompatActivity() {
     private var currentUploadField: EditText? = null
     private var currentUsername: String = ""
     private var isUploading = false
+    private var uploadProgressDialog: AlertDialog? = null
+    private var uploadProgressBar: ProgressBar? = null
+    private var uploadProgressText: TextView? = null
+    private var uploadProgressStatus: TextView? = null
     private var loadSongsJob: Job? = null
     private var loadGeneration = 0
     private val pickAudioLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -386,6 +392,7 @@ class MainActivity : AppCompatActivity() {
     /** Hủy tác vụ tải và giải phóng service khi Activity đóng mà nhạc không phát. */
     override fun onDestroy() {
         loadSongsJob?.cancel()
+        dismissUploadProgress()
         super.onDestroy()
         if (!PlayerActivity.isPlaying && PlayerActivity.musicService != null) {
             exitApplication()
@@ -491,19 +498,35 @@ class MainActivity : AppCompatActivity() {
         val duration = getAudioDuration(selectedMusicUri)
 
         setUploadLoading(true)
+        showUploadProgress()
         musicRef.putFile(selectedMusicUri)
+            .addOnProgressListener { snapshot ->
+                val stageEnd = if (imageUri != null) 85 else 98
+                updateUploadProgress(
+                    calculateStageProgress(snapshot.bytesTransferred, snapshot.totalByteCount, 0, stageEnd),
+                    getString(R.string.uploading_audio)
+                )
+            }
             .addOnSuccessListener {
                 musicRef.downloadUrl.addOnSuccessListener { musicUrl ->
                     val selectedImageUri = imageUri
                     if (selectedImageUri != null) {
                         imageRef.putFile(selectedImageUri)
+                            .addOnProgressListener { snapshot ->
+                                updateUploadProgress(
+                                    calculateStageProgress(snapshot.bytesTransferred, snapshot.totalByteCount, 85, 98),
+                                    getString(R.string.uploading_image)
+                                )
+                            }
                             .addOnSuccessListener {
+                                updateUploadProgress(99, getString(R.string.saving_song))
                                 imageRef.downloadUrl.addOnSuccessListener { imageUrl ->
                                     saveToDatabase(id, title, musicUrl.toString(), imageUrl.toString(), duration, musicStoragePath, imageStoragePath)
                                 }
                             }
                             .addOnFailureListener { showUploadError(it) }
                     } else {
+                        updateUploadProgress(99, getString(R.string.saving_song))
                         saveToDatabase(id, title, musicUrl.toString(), "", duration, musicStoragePath, "")
                     }
                 }
@@ -561,6 +584,8 @@ class MainActivity : AppCompatActivity() {
                 cacheOnlineSong(music)
                 if (::musicAdapter.isInitialized) musicAdapter.updateMusicList(MusicListMA)
                 binding.totalSongs.text = getString(R.string.total_songs_count, MusicListMA.size)
+                updateUploadProgress(100, getString(R.string.upload_complete))
+                dismissUploadProgress()
                 setUploadLoading(false)
                 Toast.makeText(this, getString(R.string.uploaded), Toast.LENGTH_SHORT).show()
             }
@@ -619,8 +644,48 @@ class MainActivity : AppCompatActivity() {
 
     /** Kết thúc trạng thái tải và thông báo lỗi upload bằng tiếng Việt. */
     private fun showUploadError(error: Exception) {
+        dismissUploadProgress()
         setUploadLoading(false)
         Toast.makeText(this, getString(R.string.upload_failed, error.localizedMessage ?: ""), Toast.LENGTH_LONG).show()
+    }
+
+    /** Hiển thị tiến trình tải lên và khóa thao tác đóng giữa chừng. */
+    private fun showUploadProgress() {
+        val content = LayoutInflater.from(this).inflate(R.layout.dialog_upload_progress, binding.root, false)
+        uploadProgressBar = content.findViewById(R.id.uploadProgressBar)
+        uploadProgressText = content.findViewById(R.id.uploadProgressText)
+        uploadProgressStatus = content.findViewById(R.id.uploadProgressStatus)
+        uploadProgressDialog = MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.upload_music_title))
+            .setView(content)
+            .setCancelable(false)
+            .create()
+            .also { it.show() }
+        updateUploadProgress(0, getString(R.string.uploading_audio))
+    }
+
+    /** Cập nhật phần trăm và tên giai đoạn đang thực hiện. */
+    private fun updateUploadProgress(progress: Int, status: String) {
+        val safeProgress = progress.coerceIn(0, 100)
+        uploadProgressBar?.progress = safeProgress
+        uploadProgressText?.text = getString(R.string.upload_progress_value, safeProgress)
+        uploadProgressStatus?.text = status
+    }
+
+    /** Quy đổi tiến trình một tệp vào khoảng phần trăm dành cho giai đoạn đó. */
+    private fun calculateStageProgress(transferred: Long, total: Long, start: Int, end: Int): Int {
+        if (total <= 0L) return start
+        val ratio = transferred.toDouble() / total.toDouble()
+        return start + ((end - start) * ratio).toInt()
+    }
+
+    /** Đóng dialog và bỏ tham chiếu view sau khi upload kết thúc. */
+    private fun dismissUploadProgress() {
+        uploadProgressDialog?.dismiss()
+        uploadProgressDialog = null
+        uploadProgressBar = null
+        uploadProgressText = null
+        uploadProgressStatus = null
     }
 
     /** Khóa/mở nút upload để ngăn người dùng gửi nhiều tác vụ cùng lúc. */
