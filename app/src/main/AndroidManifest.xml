@@ -113,6 +113,7 @@
             android:name=".MusicService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false"
+            android:stopWithTask="true"
             />
 
         <receiver
