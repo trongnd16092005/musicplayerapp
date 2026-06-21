@@ -6,15 +6,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.mpa23itb234.databinding.ActivityPlayNextBinding
 
+/** Màn hình hiển thị và quản lý hàng chờ phát nhạc hiện tại. */
 class PlayNext : AppCompatActivity() {
 
     companion object{
         var playNextList: ArrayList<Music> = ArrayList()
     }
 
+    /** Khởi tạo lưới hàng chờ và trạng thái hướng dẫn khi danh sách rỗng. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
+        setTheme(MainActivity.ACTIVE_THEME)
         val binding = ActivityPlayNextBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

@@ -11,6 +11,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.mpa23itb234.databinding.ActivityPlaylistDetailsBinding
 
+/** Màn hình xem và chỉnh sửa danh sách bài hát của một playlist. */
 class PlaylistDetails : AppCompatActivity() {
 
     private lateinit var binding: ActivityPlaylistDetailsBinding
@@ -19,14 +20,16 @@ class PlaylistDetails : AppCompatActivity() {
     companion object{
         var currentPlaylistPos: Int = -1
 
+        /** Trả playlist đang mở nếu vị trí vẫn hợp lệ. */
         fun currentPlaylistOrNull(): Playlist? {
             return PlaylistActivity.musicPlaylist.ref.getOrNull(currentPlaylistPos)
         }
     }
 
+    /** Khởi tạo danh sách bài hát và các thao tác thêm/xóa/phát ngẫu nhiên. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
+        setTheme(MainActivity.ACTIVE_THEME)
         binding = ActivityPlaylistDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         currentPlaylistPos = intent.getIntExtra("index", -1)
@@ -47,8 +50,8 @@ class PlaylistDetails : AppCompatActivity() {
         binding.playlistDetailsToolbar.setNavigationOnClickListener { finish() }
         binding.shuffleBtnPD.setOnClickListener {
             val intent = Intent(this, PlayerActivity::class.java)
-            intent.putExtra("index", 0)
-            intent.putExtra("class", "PlaylistDetailsShuffle")
+            intent.putExtra(PlayerNavigation.EXTRA_INDEX, 0)
+            intent.putExtra(PlayerNavigation.EXTRA_SOURCE, PlayerNavigation.SOURCE_PLAYLIST_SHUFFLE)
             startActivity(intent)
         }
         binding.addBtnPD.setOnClickListener {
@@ -74,6 +77,7 @@ class PlaylistDetails : AppCompatActivity() {
         }
     }
 
+    /** Cập nhật tên, ảnh đại diện, thông tin và nội dung playlist khi quay lại. */
     @SuppressLint("SetTextI18n")
     override fun onResume() {
         super.onResume()

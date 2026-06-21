@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 
+/** Khởi tạo tài nguyên dùng chung ngay khi tiến trình ứng dụng được tạo. */
 class ApplicationClass:Application() {
     companion object{
         const val CHANNEL_ID = "MusicNotification"
@@ -13,6 +14,7 @@ class ApplicationClass:Application() {
         const val PREVIOUS = "previous"
         const val EXIT = "exit"
     }
+    /** Tạo notification channel dành cho foreground music service. */
     override fun onCreate() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){

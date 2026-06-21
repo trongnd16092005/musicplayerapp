@@ -16,6 +16,7 @@ import com.example.mpa23itb234.databinding.FavouriteViewBinding
 import com.example.mpa23itb234.databinding.MoreFeaturesBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+/** Adapter dùng cho danh sách yêu thích và màn hình hàng chờ. */
 class FavouriteAdapter(
     private val context: Context,
     private var musicList: ArrayList<Music>,
@@ -38,7 +39,7 @@ class FavouriteAdapter(
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: MyHolder, position: Int) {
         holder.name.text = musicList[position].title
-        val music = musicList[position]   // ✅ thêm dòng này
+        val music = musicList[position]
 
         // Load ảnh bìa bài hát dùng thư viện Glide với placeholder nếu chưa tải được ảnh
         Glide.with(context)
@@ -53,15 +54,15 @@ class FavouriteAdapter(
             .into(holder.image)
 
         if(playNext){
-            // Nếu đang ở chế độ playNext, click sẽ phát bài hát này kế tiếp
+            // Trong chế độ hàng chờ, nhấn bài hát để phát từ vị trí tương ứng.
             holder.root.setOnClickListener {
                 val intent = Intent(context, PlayerActivity::class.java)
-                intent.putExtra("index", position)
-                intent.putExtra("class", "PlayNext")
+                intent.putExtra(PlayerNavigation.EXTRA_INDEX, position)
+                intent.putExtra(PlayerNavigation.EXTRA_SOURCE, PlayerNavigation.SOURCE_PLAY_NEXT)
                 ContextCompat.startActivity(context, intent, null)
             }
 
-            // Long click để hiển thị dialog thêm tính năng (ở đây là "Remove" bài hát khỏi PlayNext)
+            // Nhấn giữ để mở thao tác xóa bài khỏi hàng chờ.
             holder.root.setOnLongClickListener {
                 val customDialog = LayoutInflater.from(context).inflate(R.layout.more_features, holder.root, false)
                 val bindingMF = MoreFeaturesBinding.bind(customDialog)
@@ -101,8 +102,8 @@ class FavouriteAdapter(
             // Nếu không phải chế độ playNext, click sẽ phát bài hát bình thường từ FavouriteAdapter
             holder.root.setOnClickListener {
                 val intent = Intent(context, PlayerActivity::class.java)
-                intent.putExtra("index", position)
-                intent.putExtra("class", "FavouriteAdapter")
+                intent.putExtra(PlayerNavigation.EXTRA_INDEX, position)
+                intent.putExtra(PlayerNavigation.EXTRA_SOURCE, PlayerNavigation.SOURCE_FAVOURITE)
                 ContextCompat.startActivity(context, intent, null)
             }
         }

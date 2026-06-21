@@ -30,6 +30,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.mpa23itb234.databinding.ActivityPlayerBinding
 import com.example.mpa23itb234.databinding.AudioBoosterBinding
 
+/**
+ * Màn hình phát nhạc toàn màn hình.
+ *
+ * Activity hiển thị thông tin bài hát và chuyển các lệnh phát, tạm dừng,
+ * chuyển bài, tua nhạc sang [MusicService].
+ */
 class PlayerActivity : AppCompatActivity(), ServiceConnection {
 
     companion object {
@@ -54,11 +60,14 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         // Không cần xử lý kết quả, panel Equalizer hệ thống tự áp dụng hiệu ứng.
     }
 
+    // region Khởi tạo và sự kiện giao diện
+
+    /** Khởi tạo giao diện Player và đăng ký toàn bộ thao tác điều khiển nhạc. */
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Thiết lập theme từ MainActivity
-        setTheme(MainActivity.currentTheme[MainActivity.themeIndex])
+        setTheme(MainActivity.ACTIVE_THEME)
         binding = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -210,11 +219,15 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         }
     }
 
-    // Khởi tạo giao diện khi vào Activity từ các nơi khác nhau
+    // endregion
+
+    // region Khởi tạo nguồn phát
+
+    /** Chọn danh sách phát dựa trên nguồn mở Player được truyền qua Intent. */
     private fun initializeLayout() {
-        songPosition = intent.getIntExtra("index", 0)
-        when (intent.getStringExtra("class")) {
-            "NowPlaying" -> {
+        songPosition = intent.getIntExtra(PlayerNavigation.EXTRA_INDEX, 0)
+        when (intent.getStringExtra(PlayerNavigation.EXTRA_SOURCE)) {
+            PlayerNavigation.SOURCE_NOW_PLAYING -> {
                 setLayout()
                 // Cập nhật SeekBar và thời gian
                 if (isPrepared) {
@@ -230,30 +243,30 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
                 binding.playPauseBtnPA.setIconResource(if (isPlaying) R.drawable.pause_icon else R.drawable.play_icon)
             }
             // Các trường hợp khởi tạo playlist từ các Adapter khác nhau
-            "MusicAdapterSearch" -> initServiceAndPlaylist(MainActivity.musicListSearch, shuffle = false)
-            "MusicAdapter" -> initServiceAndPlaylist(MainActivity.MusicListMA, shuffle = false)
-            "FavouriteAdapter" -> initServiceAndPlaylist(FavouriteActivity.favouriteSongs, shuffle = false)
-            "MainActivity" -> initServiceAndPlaylist(MainActivity.MusicListMA, shuffle = true)
-            "FavouriteShuffle" -> initServiceAndPlaylist(FavouriteActivity.favouriteSongs, shuffle = true)
-            "PlaylistDetailsAdapter" -> initServiceAndPlaylist(
+            PlayerNavigation.SOURCE_MUSIC_SEARCH -> initServiceAndPlaylist(MainActivity.musicListSearch, shuffle = false)
+            PlayerNavigation.SOURCE_MUSIC_ADAPTER -> initServiceAndPlaylist(MainActivity.MusicListMA, shuffle = false)
+            PlayerNavigation.SOURCE_FAVOURITE -> initServiceAndPlaylist(FavouriteActivity.favouriteSongs, shuffle = false)
+            PlayerNavigation.SOURCE_MAIN_SHUFFLE -> initServiceAndPlaylist(MainActivity.MusicListMA, shuffle = true)
+            PlayerNavigation.SOURCE_FAVOURITE_SHUFFLE -> initServiceAndPlaylist(FavouriteActivity.favouriteSongs, shuffle = true)
+            PlayerNavigation.SOURCE_PLAYLIST -> initServiceAndPlaylist(
                 PlaylistDetails.currentPlaylistOrNull()?.playlist ?: run {
                     finish()
                     return
                 },
                 shuffle = false
             )
-            "PlaylistDetailsShuffle" -> initServiceAndPlaylist(
+            PlayerNavigation.SOURCE_PLAYLIST_SHUFFLE -> initServiceAndPlaylist(
                 PlaylistDetails.currentPlaylistOrNull()?.playlist ?: run {
                     finish()
                     return
                 },
                 shuffle = true
             )
-            "PlayNext" -> initServiceAndPlaylist(PlayNext.playNextList, shuffle = false, playNext = true)
+            PlayerNavigation.SOURCE_PLAY_NEXT -> initServiceAndPlaylist(PlayNext.playNextList, shuffle = false, playNext = true)
         }
     }
 
-    // Cập nhật giao diện song info: ảnh, tên, màu nền
+    /** Hiển thị ảnh, tên, trạng thái yêu thích và màu nền của bài hiện tại. */
     private fun setLayout() {
         val currentSong = currentPlayerSongOrNull() ?: return
         fIndex = favouriteChecker(currentSong)
@@ -277,10 +290,12 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         window?.statusBarColor = bgColor
     }
 
+    /** Yêu cầu MusicService chuẩn bị MediaPlayer cho bài hát hiện tại. */
     private fun createMediaPlayer() {
         musicService?.createMediaPlayer()
     }
 
+    /** Yêu cầu service phát nhạc nếu MediaPlayer đã chuẩn bị xong. */
     private fun playMusic() {
         if (!isPrepared) {
             Toast.makeText(this, getString(R.string.song_loading), Toast.LENGTH_SHORT).show()
@@ -289,18 +304,20 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         musicService?.play()
     }
 
+    /** Yêu cầu service tạm dừng bài hát hiện tại. */
     private fun pauseMusic() {
         if (!isPrepared) return
         musicService?.pause()
     }
 
-    // Chuyển bài tiếp theo hoặc trước đó
+    /** Cập nhật vị trí bài hát, giao diện và chuẩn bị bài mới. */
     private fun prevNextSong(increment: Boolean) {
         setSongPosition(increment)
         setLayout()
         createMediaPlayer()
     }
 
+    /** Khóa điều khiển và đặt UI về trạng thái chờ khi bài hát đang tải. */
     private fun setPlayerLoading(loading: Boolean) {
         isPrepared = !loading
         isPlaying = false
@@ -312,7 +329,7 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         binding.playPauseBtnPA.setIconResource(R.drawable.play_icon)
     }
 
-    // Kết nối tới MusicService và khởi tạo player
+    /** Nhận MusicService, yêu cầu audio focus và bắt đầu chuẩn bị bài hát. */
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
         if (musicService == null) {
             val binder = service as MusicService.MyBinder
@@ -325,11 +342,16 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         musicService?.seekBarSetup()
     }
 
+    /** Xóa tham chiếu service khi kết nối bị ngắt ngoài ý muốn. */
     override fun onServiceDisconnected(name: ComponentName?) {
         musicService = null
     }
 
-    // Hiện bottom sheet để chọn hẹn giờ dừng nhạc
+    // endregion
+
+    // region Tiện ích Player
+
+    /** Hiển thị các mốc hẹn giờ dừng nhạc 15, 30 và 60 phút. */
     private fun showBottomSheetDialog() {
         val dialog = BottomSheetDialog(this@PlayerActivity)
         dialog.setContentView(R.layout.bottom_sheet_dialog)
@@ -366,7 +388,7 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         }
     }
 
-    // Lấy thông tin bài nhạc nếu phát từ URI ngoài
+    /** Đọc metadata khi người dùng mở một file âm thanh từ ứng dụng khác. */
     private fun getMusicDetails(contentUri: Uri): Music? {
         val projection = arrayOf(
             MediaStore.Audio.Media.DATA,
@@ -410,13 +432,14 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         )
     }
 
+    /** Dọn phiên phát file ngoài khi Player bị hủy và bài hát đã dừng. */
     override fun onDestroy() {
         super.onDestroy()
         // Nếu phát từ file ngoài và đã dừng, thoát app
         if (currentPlayerSongOrNull()?.id == "Unknown" && !isPlaying) exitApplication(this)
     }
 
-    // Khởi tạo service và playlist, hỗ trợ shuffle hoặc phát Next
+    /** Sao chép danh sách nguồn, áp dụng shuffle và kết nối MusicService. */
     private fun initServiceAndPlaylist(playlist: ArrayList<Music>, shuffle: Boolean, playNext: Boolean = false) {
         val intent = Intent(this, MusicService::class.java)
         bindService(intent, this, BIND_AUTO_CREATE)
@@ -432,4 +455,6 @@ class PlayerActivity : AppCompatActivity(), ServiceConnection {
         setLayout()
         if (!playNext) PlayNext.playNextList = ArrayList()
     }
+
+    // endregion
 }

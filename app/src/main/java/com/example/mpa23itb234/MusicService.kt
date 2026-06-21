@@ -16,6 +16,12 @@ import android.support.v4.media.session.PlaybackStateCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 
+/**
+ * Foreground Service quản lý duy nhất vòng đời của MediaPlayer.
+ *
+ * Service chuẩn bị/phát nhạc, xử lý audio focus, notification media và cung
+ * cấp trạng thái phát cho PlayerActivity cùng mini player.
+ */
 class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
     private var myBinder = MyBinder()
     var mediaPlayer: MediaPlayer? = null
@@ -24,11 +30,15 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
     private var seekBarRunnable: Runnable? = null
     lateinit var audioManager: AudioManager
 
+    // region Vòng đời Service và notification
+
+    /** Khởi tạo MediaSession khi service được tạo. */
     override fun onCreate() {
         super.onCreate()
         mediaSession = MediaSessionCompat(baseContext, "My Music")
     }
 
+    /** Trả Binder để Activity điều khiển trực tiếp MusicService. */
     override fun onBind(intent: Intent?): IBinder {
         if (!::mediaSession.isInitialized) {
             mediaSession = MediaSessionCompat(baseContext, "My Music")
@@ -37,11 +47,13 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
     }
 
     inner class MyBinder : Binder() {
+        /** Cung cấp thể hiện MusicService hiện tại cho Activity đã bind. */
         fun currentService(): MusicService {
             return this@MusicService
         }
     }
 
+    /** Tạo/cập nhật notification với các nút Previous, Play/Pause, Next và Exit. */
     @SuppressLint("UnspecifiedImmutableFlag")
     fun showNotification(playPauseBtn: Int) {
         val song = currentPlayerSongOrNull() ?: return
@@ -106,38 +118,37 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
             mediaSession.setPlaybackState(getPlayBackState())
             mediaSession.setCallback(object : MediaSessionCompat.Callback() {
 
-                //called when play button is pressed
+                // Phát nhạc từ notification hoặc thiết bị media.
                 override fun onPlay() {
                     super.onPlay()
                     handlePlayPause()
                 }
 
-                //called when pause button is pressed
+                // Tạm dừng nhạc từ notification hoặc thiết bị media.
                 override fun onPause() {
                     super.onPause()
                     handlePlayPause()
                 }
 
-                //called when next button is pressed
+                // Chuyển đến bài tiếp theo.
                 override fun onSkipToNext() {
                     super.onSkipToNext()
                     prevNextSong(increment = true, context = baseContext)
                 }
 
-                //called when previous button is pressed
+                // Quay lại bài trước.
                 override fun onSkipToPrevious() {
                     super.onSkipToPrevious()
                     prevNextSong(increment = false, context = baseContext)
                 }
 
-                //called when headphones buttons are pressed
-                //currently only pause or play music on button click
+                // Xử lý nút media trên tai nghe hoặc thiết bị Bluetooth.
                 override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
                     handlePlayPause()
                     return super.onMediaButtonEvent(mediaButtonEvent)
                 }
 
-                //called when seekbar is changed
+                // Tua bài hát từ media control của hệ thống.
                 override fun onSeekTo(pos: Long) {
                     super.onSeekTo(pos)
                     seekTo(pos.toInt())
@@ -150,6 +161,11 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         startForeground(13, notification)
     }
 
+    // endregion
+
+    // region Chuẩn bị và điều khiển phát nhạc
+
+    /** Reset MediaPlayer, nạp bài hiện tại bất đồng bộ và bắt đầu phát khi sẵn sàng. */
     fun createMediaPlayer() {
         try {
             val song = currentPlayerSongOrNull() ?: return
@@ -187,6 +203,7 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Cập nhật thời gian và seek bar của PlayerActivity theo chu kỳ 200 ms. */
     fun seekBarSetup() {
         stopSeekBarUpdates()
         seekBarRunnable = Runnable {
@@ -203,11 +220,13 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         seekBarRunnable?.let { mainHandler.postDelayed(it, 0) }
     }
 
+    /** Dừng Runnable cập nhật seek bar để tránh callback sau khi service kết thúc. */
     fun stopSeekBarUpdates() {
         seekBarRunnable?.let { mainHandler.removeCallbacks(it) }
         seekBarRunnable = null
     }
 
+    /** Tạo PlaybackState dùng cho MediaSession và notification hệ thống. */
     fun getPlayBackState(): PlaybackStateCompat {
         val playbackSpeed = if (PlayerActivity.isPlaying) 1F else 0F
 
@@ -218,23 +237,27 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
             .build()
     }
 
+    /** Đảo trạng thái phát/tạm dừng từ MediaSession. */
     fun handlePlayPause() {
         if (!PlayerActivity.isPrepared) return
         if (PlayerActivity.isPlaying) pauseMusic()
         else playMusic()
 
-        //update playback state for notification
+        // Đồng bộ trạng thái cho notification.
         mediaSession.setPlaybackState(getPlayBackState())
     }
 
+    /** Phát nhạc nếu service chưa ở trạng thái playing. */
     fun play() {
         if (!PlayerActivity.isPlaying) playMusic()
     }
 
+    /** Tạm dừng nhạc nếu service đang phát. */
     fun pause() {
         if (PlayerActivity.isPlaying) pauseMusic()
     }
 
+    /** Thay hàng phát hiện tại và chuẩn hóa vị trí bài hát. */
     fun setPlaylist(list: List<Music>, position: Int) {
         PlayerActivity.musicListPA = ArrayList(list)
         PlayerActivity.songPosition = if (PlayerActivity.musicListPA.isEmpty()) {
@@ -244,18 +267,22 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Chuẩn bị MediaPlayer cho bài hiện tại. */
     fun prepare() {
         createMediaPlayer()
     }
 
+    /** Chuyển đến bài tiếp theo trong hàng phát. */
     fun next() {
         prevNextSong(increment = true, context = baseContext)
     }
 
+    /** Quay lại bài trước trong hàng phát. */
     fun previous() {
         prevNextSong(increment = false, context = baseContext)
     }
 
+    /** Tua đến vị trí mili giây yêu cầu khi player đã sẵn sàng. */
     fun seekTo(pos: Int) {
         if (PlayerActivity.isPrepared) {
             try {
@@ -266,24 +293,29 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Trả về bài hát hiện tại hoặc null nếu hàng phát không hợp lệ. */
     fun getCurrentSong(): Music? {
         return currentPlayerSongOrNull()
     }
 
+    /** Đọc vị trí phát hiện tại theo cách an toàn với trạng thái MediaPlayer. */
     fun getCurrentPosition(): Int {
         return safeCurrentPosition() ?: 0
     }
 
+    /** Đọc tổng thời lượng bài hiện tại nếu player đã chuẩn bị. */
     fun getDuration(): Int {
         return if (PlayerActivity.isPrepared) safeDuration() ?: 0 else 0
     }
 
+    /** Kiểm tra trạng thái phát thực tế từ MediaPlayer. */
     fun isPlaying(): Boolean {
         return mediaPlayer?.isPlaying == true
     }
 
 
 
+    /** Đổi vị trí bài hát, chuẩn bị bài mới và cập nhật các giao diện liên quan. */
     private fun prevNextSong(increment: Boolean, context: Context){
 
         setSongPosition(increment = increment)
@@ -295,22 +327,20 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         PlayerActivity.fIndex = favouriteChecker(song)
         updatePlayerFavouriteUi()
 
-        //update playback state for notification
+        // Đồng bộ trạng thái cho notification.
         if (PlayerActivity.isPrepared) mediaSession.setPlaybackState(getPlayBackState())
     }
 
+    /** Tạm dừng nhạc khi ứng dụng mất audio focus. */
     override fun onAudioFocusChange(focusChange: Int) {
         if (focusChange <= 0) {
             pauseMusic()
         }
-//        else{
-//            playMusic()
-//        }
     }
 
+    /** Bắt đầu phát và đồng bộ PlayerActivity, mini player, notification. */
     private fun playMusic(){
         if (!PlayerActivity.isPrepared) return
-        //play music
         PlayerActivity.isPlaying = true
         try {
             mediaPlayer?.start()
@@ -323,9 +353,9 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         showNotification(R.drawable.pause_icon)
     }
 
+    /** Tạm dừng phát và đồng bộ toàn bộ giao diện điều khiển. */
     private fun pauseMusic(){
         if (!PlayerActivity.isPrepared) return
-        //pause music
         PlayerActivity.isPlaying = false
         try {
             mediaPlayer?.pause()
@@ -341,16 +371,22 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
 
 
 
-    //for making persistent
+    // endregion
+
+    // region Vòng đời và truy cập MediaPlayer an toàn
+
+    /** Giữ service tồn tại để tiếp tục phát nhạc khi Activity rời màn hình. */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
     }
 
+    /** Dừng callback seek bar trước khi service bị hủy. */
     override fun onDestroy() {
         stopSeekBarUpdates()
         super.onDestroy()
     }
 
+    /** Đọc currentPosition và chuyển lỗi trạng thái thành null thay vì crash. */
     private fun safeCurrentPosition(): Int? {
         return try {
             mediaPlayer?.currentPosition
@@ -360,6 +396,7 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Đọc duration và chuyển lỗi trạng thái thành null thay vì crash. */
     private fun safeDuration(): Int? {
         return try {
             mediaPlayer?.duration
@@ -369,6 +406,11 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    // endregion
+
+    // region Đồng bộ giao diện Player
+
+    /** Đưa PlayerActivity về trạng thái đang tải nếu màn hình còn tồn tại. */
     private fun updatePlayerLoadingUi() {
         try {
             PlayerActivity.binding.playPauseBtnPA.isEnabled = false
@@ -381,6 +423,7 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Bật điều khiển và hiển thị thời lượng sau khi MediaPlayer sẵn sàng. */
     private fun updatePlayerPreparedUi(player: MediaPlayer) {
         try {
             PlayerActivity.binding.playPauseBtnPA.isEnabled = true
@@ -394,6 +437,7 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Đưa nút Play/Pause về trạng thái đã dừng khi phát lỗi. */
     private fun updatePlayerStoppedUi() {
         try {
             PlayerActivity.binding.playPauseBtnPA.isEnabled = true
@@ -402,6 +446,7 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Cập nhật ảnh và tên bài hát trên PlayerActivity nếu màn hình còn tồn tại. */
     private fun updatePlayerSongUi(context: Context, song: Music) {
         try {
             Glide.with(context)
@@ -413,6 +458,7 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Đồng bộ biểu tượng yêu thích của bài đang phát. */
     private fun updatePlayerFavouriteUi() {
         try {
             if (PlayerActivity.isFavourite) {
@@ -424,10 +470,13 @@ class MusicService : Service(), AudioManager.OnAudioFocusChangeListener {
         }
     }
 
+    /** Đồng bộ icon Play/Pause trên PlayerActivity. */
     private fun updatePlayerPlayPauseUi(icon: Int) {
         try {
             PlayerActivity.binding.playPauseBtnPA.setIconResource(icon)
         } catch (_: Exception) {
         }
     }
+
+    // endregion
 }

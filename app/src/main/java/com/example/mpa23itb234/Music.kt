@@ -24,7 +24,7 @@ data class Music(
     val imageStoragePath: String = ""
 )
 
-// Lớp đại diện cho một danh sách phát
+/** Model danh sách phát cùng metadata người tạo và thời điểm tạo. */
 class Playlist {
     var id: String = ""
     lateinit var name: String
@@ -33,16 +33,17 @@ class Playlist {
     lateinit var createdOn: String
 }
 
-// Lớp quản lý nhiều danh sách phát
+/** Model bao bọc toàn bộ playlist của người dùng hiện tại. */
 class MusicPlaylist {
-    var ref: ArrayList<Playlist> = ArrayList() // Danh sách tất cả playlist
+    var ref: ArrayList<Playlist> = ArrayList()
 }
 
+/** Kiểm tra bài hát có đường dẫn HTTP/HTTPS và được xem là bài online. */
 fun Music.isOnlineSong(): Boolean {
     return path.startsWith("http://") || path.startsWith("https://")
 }
 
-// Hàm định dạng thời lượng từ milliseconds thành chuỗi "mm:ss"
+/** Định dạng thời lượng mili giây thành chuỗi mm:ss. */
 fun formatDuration(duration: Long): String {
     val minutes = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS)
     val seconds = (TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS) -
@@ -50,7 +51,7 @@ fun formatDuration(duration: Long): String {
     return String.format("%02d:%02d", minutes, seconds)
 }
 
-// Lấy ảnh bìa nhúng từ file nhạc
+/** Đọc ảnh bìa nhúng trong file local; bài online trả về null. */
 fun getImgArt(path: String): ByteArray? {
     if (path.startsWith("http://") || path.startsWith("https://")) return null
 
@@ -65,7 +66,7 @@ fun getImgArt(path: String): ByteArray? {
     }
 }
 
-// Cập nhật vị trí bài hát đang phát (tiến/lùi)
+/** Tăng/giảm vị trí bài hát và xử lý quay vòng đầu/cuối danh sách. */
 fun setSongPosition(increment: Boolean) {
     val list = currentPlayerListOrNull()
     if (list.isNullOrEmpty()) return
@@ -83,6 +84,7 @@ fun setSongPosition(increment: Boolean) {
     }
 }
 
+/** Trả hàng phát hiện tại hoặc null nếu Player chưa được khởi tạo. */
 fun currentPlayerListOrNull(): ArrayList<Music>? {
     return try {
         PlayerActivity.musicListPA
@@ -91,12 +93,13 @@ fun currentPlayerListOrNull(): ArrayList<Music>? {
     }
 }
 
+/** Trả bài hát tại vị trí phát hiện tại nếu dữ liệu hợp lệ. */
 fun currentPlayerSongOrNull(): Music? {
     val list = currentPlayerListOrNull() ?: return null
     return list.getOrNull(PlayerActivity.songPosition)
 }
 
-// Thoát ứng dụng và dọn dẹp các tài nguyên nhạc
+/** Dừng player, notification, audio focus và xóa trạng thái phát runtime. */
 fun stopMusicPlayback() {
     val service = PlayerActivity.musicService
     if (service != null) {
@@ -112,12 +115,13 @@ fun stopMusicPlayback() {
     PlayerActivity.nowPlayingId = ""
 }
 
+/** Dừng nhạc và đóng toàn bộ Activity khi có context phù hợp. */
 fun exitApplication(context: Context? = null) {
     stopMusicPlayback()
     (context as? Activity)?.finishAffinity()
 }
 
-// Kiểm tra bài hát có nằm trong danh sách yêu thích không
+/** Kiểm tra bài hiện tại trong yêu thích và trả về vị trí tìm thấy. */
 fun favouriteChecker(song: Music): Int {
     PlayerActivity.isFavourite = false
     FavouriteActivity.favouriteSongs.forEachIndexed { index, music ->
@@ -129,7 +133,7 @@ fun favouriteChecker(song: Music): Int {
     return -1
 }
 
-// Loại bỏ các bài hát không tồn tại khỏi playlist
+/** Loại các file local không còn tồn tại; giữ nguyên bài online. */
 fun checkPlaylist(playlist: ArrayList<Music>): ArrayList<Music> {
     val indicesToRemove = mutableListOf<Int>()
     playlist.forEachIndexed { index, music ->
@@ -141,7 +145,7 @@ fun checkPlaylist(playlist: ArrayList<Music>): ArrayList<Music> {
     return playlist
 }
 
-// Tùy chỉnh màu nền và màu chữ của các nút trong hộp thoại
+/** Áp màu nút dialog theo theme đang dùng. */
 fun setDialogBtnBackground(context: Context, dialog: AlertDialog) {
     dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)?.setTextColor(
         MaterialColors.getColor(context, R.attr.dialogTextColor, Color.WHITE)
@@ -157,7 +161,7 @@ fun setDialogBtnBackground(context: Context, dialog: AlertDialog) {
     )
 }
 
-// Lấy màu chính của ảnh (làm mờ ảnh thành 1x1 pixel rồi lấy màu duy nhất đó)
+/** Lấy màu đại diện bằng cách thu ảnh về một điểm ảnh. */
 fun getMainColor(img: Bitmap): Int {
     val newImg = Bitmap.createScaledBitmap(img, 1, 1, true)
     val color = newImg.getPixel(0, 0)

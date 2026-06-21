@@ -3,19 +3,20 @@ package com.example.mpa23itb234
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mpa23itb234.databinding.ActivitySelectionBinding
 
+/** Màn hình tìm và chọn bài hát để thêm vào playlist hiện tại. */
 class SelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySelectionBinding
     private lateinit var adapter: MusicAdapter
 
+    /** Khởi tạo danh sách chọn bài và bộ lọc tìm kiếm. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setTheme(MainActivity.ACTIVE_NAV_THEME)
         binding = ActivitySelectionBinding.inflate(layoutInflater)
-        setTheme(MainActivity.currentThemeNav[MainActivity.themeIndex])
         setContentView(binding.root)
         binding.selectionRV.setItemViewCacheSize(30)
         binding.selectionRV.setHasFixedSize(true)
@@ -23,7 +24,7 @@ class SelectionActivity : AppCompatActivity() {
         adapter = MusicAdapter(this, MainActivity.MusicListMA, selectionActivity = true)
         binding.selectionRV.adapter = adapter
         binding.selectionToolbar.setNavigationOnClickListener { finish() }
-        //for search View
+        // Lọc danh sách nguồn theo tên bài hát.
         binding.searchViewSA.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean = true
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -41,12 +42,4 @@ class SelectionActivity : AppCompatActivity() {
         })
     }
 
-    override fun onResume() {
-        super.onResume()
-        //for black theme checking
-        if(MainActivity.themeIndex == 4)
-        {
-            binding.searchViewSA.backgroundTintList = ContextCompat.getColorStateList(this, R.color.white)
-        }
-    }
 }

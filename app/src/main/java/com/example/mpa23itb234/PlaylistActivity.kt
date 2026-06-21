@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
+/** Màn hình hiển thị, tạo và mở các danh sách phát của người dùng. */
 class PlaylistActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPlaylistBinding
@@ -22,24 +23,26 @@ class PlaylistActivity : AppCompatActivity() {
         var musicPlaylist: MusicPlaylist = MusicPlaylist()
     }
 
+    /** Khởi tạo lưới playlist và sự kiện tạo playlist mới. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(MainActivity.currentThemeNav[MainActivity.themeIndex])
+        setTheme(MainActivity.ACTIVE_THEME)
         binding = ActivityPlaylistBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.playlistToolbar.setNavigationOnClickListener { finish() }
+        binding.backBtnPlaylist.setOnClickListener { finish() }
 
         binding.playlistRV.setHasFixedSize(true)
         binding.playlistRV.setItemViewCacheSize(13)
         binding.playlistRV.layoutManager = GridLayoutManager(this@PlaylistActivity, 2)
         adapter = PlaylistViewAdapter(this, playlistList = musicPlaylist.ref)
         binding.playlistRV.adapter = adapter
-        binding.addPlaylistBtn.setOnClickListener { customAlertDialog() }
+        binding.addPlaylistBtn.setOnClickListener { showCreatePlaylistDialog() }
 
         if(musicPlaylist.ref.isNotEmpty()) binding.instructionPA.visibility = View.GONE
     }
-    private fun customAlertDialog(){
+    /** Hiển thị form nhập tên playlist và người tạo. */
+    private fun showCreatePlaylistDialog(){
         val customDialog = LayoutInflater.from(this@PlaylistActivity).inflate(R.layout.add_playlist_dialog, binding.root, false)
         val binder = AddPlaylistDialogBinding.bind(customDialog)
         val builder = MaterialAlertDialogBuilder(this)
@@ -59,6 +62,7 @@ class PlaylistActivity : AppCompatActivity() {
         setDialogBtnBackground(this, dialog)
 
     }
+    /** Kiểm tra trùng tên, tạo playlist và lưu thư viện người dùng. */
     private fun addPlaylist(name: String, createdBy: String){
         var playlistExists = false
         for(i in musicPlaylist.ref) {
@@ -83,6 +87,7 @@ class PlaylistActivity : AppCompatActivity() {
         }
     }
 
+    /** Làm mới lưới khi quay lại từ màn chi tiết playlist. */
     override fun onResume() {
         super.onResume()
         adapter.notifyDataSetChanged()
